@@ -19,7 +19,11 @@ const geistMono = Geist_Mono({
 const notoSerifTC = Noto_Serif_TC({
   variable: "--font-noto-serif-tc",
   weight: ["300", "600"],
-  subsets: ["chinese-traditional"],
+  // "chinese-traditional" isn't a valid next/font subset for this family —
+  // CJK glyphs are always included regardless of `subsets`; only additional
+  // Latin-script ranges are selectable, which is what's needed here since
+  // this font also renders Latin text (English manifesto/chapter copy).
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
