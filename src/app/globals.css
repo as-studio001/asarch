@@ -24,3 +24,13 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Scrollable but no visible scrollbar (e.g. the gallery overlay) — stays
+   scrollable via wheel/drag/keyboard, just doesn't draw the track/thumb. */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge/IE */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge Chromium */
+}

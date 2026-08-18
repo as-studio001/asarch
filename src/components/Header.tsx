@@ -8,9 +8,10 @@ import { LANGUAGES, useLanguage } from "@/lib/i18n";
 // (原型教學轉code/design_handoff_architecture_site/建築事務所首頁.dc.html),
 // minus the search box, mobile layout, and dark/light-mode toggle per
 // explicit request — this site only ever renders the "dark mode" look
-// (white text, no header background of its own — only the logo/nav-pill
-// glassmorphism blocks behind it), so those values are just hardcoded
-// instead of branching on isDarkMode/isMobile like the original.
+// (white text), so those values are just hardcoded instead of branching on
+// isDarkMode/isMobile like the original. The header element itself still
+// has no background of its own — only the left (menu+logo) and right
+// (nav pill) groups have their own glassmorphism boxes behind them.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 const MATERIAL_LINKS = [
@@ -46,7 +47,13 @@ export default function Header() {
       className="fixed top-0 right-0 left-0 z-[1000] flex items-center justify-between"
       style={{ padding: "24px 40px" }}
     >
-      <div className="flex items-center gap-5">
+      <div
+        className="flex items-center gap-5 rounded-lg backdrop-blur-md"
+        style={{
+          padding: "16px 24px",
+          backgroundColor: "oklch(0.15 0 0 / 0.15)",
+        }}
+      >
         <div data-menu-box className="relative">
           <button
             type="button"
@@ -86,7 +93,7 @@ export default function Header() {
             </div>
           )}
         </div>
-        <a href="https://www.mashup.com.tw/as%20studio/" className="flex items-center">
+        <a href="https://www.mashup.com.tw/as%20studio/" className="flex items-center gap-3">
           <Image
             src={`${basePath}/favicon-logo.png`}
             alt="原型結構 as.studio"
@@ -95,6 +102,15 @@ export default function Header() {
             className="h-9 w-9"
             priority
           />
+          <span
+            className="text-base text-white"
+            style={{
+              fontFamily: "var(--font-noto-serif-tc), 'Source Han Serif TC', serif",
+              letterSpacing: "0.1em",
+            }}
+          >
+            原型建築
+          </span>
         </a>
       </div>
 

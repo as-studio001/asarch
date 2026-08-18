@@ -159,6 +159,11 @@ function __OriginkitBase_ParticleImage(__props) {
         height,
         style,
         backgroundColor,
+        // How much bigger than the visible canvas the mouse-hover trigger
+        // zone is (e.g. 1.2 = 120%), grown evenly on all sides so the
+        // canvas stays centered within it. Default 1 = old behavior
+        // (trigger zone === canvas bounds exactly).
+        hoverAreaScale = 1,
         ...props
     } = { ...COMPONENT_DEFAULTS, ...__props }
     const hover = hoverEnabled
@@ -796,45 +801,63 @@ function __OriginkitBase_ParticleImage(__props) {
                 startAnimRef.current("scattering")
         }
     }
+    // Percent, relative to the canvas's own box, that the invisible trigger
+    // overlay extends beyond it on each side. 0 when hoverAreaScale is left
+    // at 1, so the overlay exactly matches the canvas and (with
+    // pointerEvents:"none") changes nothing about the old behavior.
+    const hitPad = ((Math.max(1, hoverAreaScale) - 1) / 2) * 100
     return (
-        <div
-            ref={containerRef}
-            {...props}
-            style={{
-                position: "relative",
-                width,
-                height,
-                overflow: "hidden",
-                backgroundColor,
-                ...style,
-            }}
-        >
-            <canvas
-                ref={canvasRef}
-                style={{ display: "block", width: "100%", height: "100%" }}
+        <div style={{ position: "relative", width, height }}>
+            <div
+                ref={containerRef}
+                {...props}
+                style={{
+                    position: "relative",
+                    width: "100%",
+                    height: "100%",
+                    overflow: "hidden",
+                    backgroundColor,
+                    ...style,
+                }}
+            >
+                <canvas
+                    ref={canvasRef}
+                    style={{ display: "block", width: "100%", height: "100%" }}
+                />
+                {!image && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "rgba(0,0,0,0.3)",
+                            fontSize: 13,
+                            fontFamily: "monospace",
+                            border: "1px dashed rgba(0,0,0,0.15)",
+                            borderRadius: 4,
+                            background: "rgba(0,0,0,0.04)",
+                            pointerEvents: "none",
+                        }}
+                    >
+                        Upload image in panel →
+                    </div>
+                )}
+            </div>
+            {/* Enlarged hover-trigger zone. Handlers moved here from the
+                canvas — they already resolve position via
+                canvas.getBoundingClientRect() + e.clientX/Y, so they work
+                identically no matter which element the listener sits on. */}
+            <div
+                style={{
+                    position: "absolute",
+                    inset: `${-hitPad}%`,
+                    pointerEvents: hitPad ? "auto" : "none",
+                }}
                 onMouseMove={onMouseMove}
                 onMouseLeave={onMouseLeave}
             />
-            {!image && (
-                <div
-                    style={{
-                        position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "rgba(0,0,0,0.3)",
-                        fontSize: 13,
-                        fontFamily: "monospace",
-                        border: "1px dashed rgba(0,0,0,0.15)",
-                        borderRadius: 4,
-                        background: "rgba(0,0,0,0.04)",
-                        pointerEvents: "none",
-                    }}
-                >
-                    Upload image in panel →
-                </div>
-            )}
         </div>
     )
 }

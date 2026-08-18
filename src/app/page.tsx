@@ -5,6 +5,8 @@ import Image from "next/image";
 import ParticleImage from "@/components/originkit/ui/svgparticles";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import MoreOverlay, { type MoreLink } from "@/components/MoreOverlay";
+import GalleryOverlay from "@/components/GalleryOverlay";
 import { useLanguage } from "@/lib/i18n";
 import {
   manifestoHeadlineLines,
@@ -81,6 +83,8 @@ const RESTORE_THUMBS = [
   "restore-thumb-4.jpg",
   "restore-thumb-5.jpg",
   "restore-thumb-6.jpg",
+  "restore-thumb-7.jpg",
+  "restore-thumb-8.jpg",
 ];
 const RESTORE_THUMB_INTERVAL_MS = 2000;
 
@@ -92,6 +96,9 @@ const DETAIL_THUMBS = [
   "detail-thumb-4.jpg",
   "detail-thumb-5.jpg",
   "detail-thumb-6.jpg",
+  "detail-thumb-7.jpg",
+  "detail-thumb-8.jpg",
+  "detail-thumb-9.jpg",
 ];
 const DETAIL_THUMB_INTERVAL_MS = 2000;
 
@@ -106,9 +113,61 @@ const EXHIBIT_THUMBS = [
   "exhibit-thumb-6.jpg",
   "exhibit-thumb-7.jpg",
   "exhibit-thumb-8.jpg",
-  "exhibit-thumb-9.jpg",
 ];
 const EXHIBIT_THUMB_INTERVAL_MS = 2000;
+
+// ADA建築展 masonry-gallery photos.
+const ADA_GALLERY = [
+  "gallery-ada-1.jpg",
+  "gallery-ada-2.jpg",
+  "gallery-ada-3.jpg",
+  "gallery-ada-4.jpg",
+  "gallery-ada-5.jpg",
+  "gallery-ada-6.jpg",
+  "gallery-ada-7.jpg",
+  "gallery-ada-8.jpg",
+  "gallery-ada-9.jpg",
+  "gallery-ada-10.jpg",
+  "gallery-ada-11.jpg",
+  "gallery-ada-12.jpg",
+  "gallery-ada-13.jpg",
+];
+
+// 構竹林鐵 masonry-gallery photos.
+const BAMBOO_GALLERY = Array.from(
+  { length: 26 },
+  (_, i) => `gallery-bamboo-${i + 1}.jpg`
+);
+
+// 台北藝廊展 masonry-gallery photos.
+const TAIPEI_GALLERY = Array.from(
+  { length: 23 },
+  (_, i) => `gallery-taipei-${i + 1}.jpg`
+);
+
+// "MORE" button (below each chapter's main slider photo) pops up this row
+// of buttons over a dark backdrop. Placeholder labels/links for now — swap
+// in the real ones once they're supplied, count isn't fixed to 3.
+const MORE_LINKS: Record<"restore" | "detail" | "exhibit", MoreLink[]> = {
+  restore: [
+    { label: "信義街咾咕石‧芳宅", href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=622507" },
+    { label: "嘉義實驗木場", href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=582351" },
+    { label: "原型事務所", href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=506003" },
+  ],
+  detail: [
+    { label: "接合", href: "#" },
+    { label: "材料", href: "#" },
+    { label: "工法", href: "#" },
+    { label: "施工", href: "#" },
+  ],
+  exhibit: [
+    { label: "好感空間展", href: "https://www.tnhs.com.tw/" },
+    { label: "ADA建築展", gallery: ADA_GALLERY },
+    { label: "構竹林鐵", gallery: BAMBOO_GALLERY },
+    { label: "台北藝廊展", gallery: TAIPEI_GALLERY },
+    { label: "台南建築三年展", href: "https://asas2026.wixsite.com/mysite/%E5%89%AF%E6%9C%AC-%E5%B1%95%E8%A6%BD%E6%B4%BB%E5%8B%95" },
+  ],
+};
 
 // Chapter photo parallax (shared by Chapter 01 and 02): max vertical drift
 // (px) and how much of the section's distance from viewport-center
@@ -131,6 +190,8 @@ export default function Home() {
   const [restoreThumbIndex, setRestoreThumbIndex] = useState(0);
   const [detailThumbIndex, setDetailThumbIndex] = useState(0);
   const [exhibitThumbIndex, setExhibitThumbIndex] = useState(0);
+  const [openMore, setOpenMore] = useState<null | "restore" | "detail" | "exhibit">(null);
+  const [openGallery, setOpenGallery] = useState<string[] | null>(null);
   // 0 = just landed (only roof/beam + wall-above-boundary visible, rest
   // hidden under the fade), 1 = fully scrolled through (photo fully lit —
   // plants/furniture/glass wall/floor revealed).
@@ -325,6 +386,20 @@ export default function Home() {
   const showNextDetailThumb = () =>
     setDetailThumbIndex((i) => (i + 1) % DETAIL_THUMBS.length);
 
+  // Escape closes whichever overlay (MORE buttons or the photo gallery) is
+  // open, same as clicking the backdrop. Gallery takes priority since it's
+  // the one stacked on top when both could theoretically be set.
+  useEffect(() => {
+    if (!openMore && !openGallery) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (openGallery) setOpenGallery(null);
+      else setOpenMore(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openMore, openGallery]);
+
   const showPrevRestoreThumb = () =>
     setRestoreThumbIndex(
       (i) => (i - 1 + RESTORE_THUMBS.length) % RESTORE_THUMBS.length
@@ -418,15 +493,22 @@ export default function Home() {
           />
         </svg>
 
-        {/* SVG particle effect — half size, anchored to the left, floats above the photo */}
+        {/* SVG particle effect — 150% of the original half-size box, scaled
+            from its top-left corner (kept fixed) growing right/down. The
+            translateY can't stay a self-referential "-50%" (that's 50% of
+            the element's OWN height, so it'd shift when height grows from
+            h-1/2 to h-3/4) — replaced with the equivalent fixed "-25vh"
+            (50% of the *original* h-1/2 box, computed against the h-screen
+            parent) so the top edge lands in the exact same place. */}
         <div
           ref={particleWrapRef}
-          className="absolute top-1/2 left-0 h-1/2 w-1/2"
-          style={{ transform: "translate(3cm, calc(-50% - 1cm))" }}
+          className="absolute top-1/2 left-0 h-3/4 w-3/4"
+          style={{ transform: "translate(1cm, calc(-25vh - 1cm))" }}
         >
           <ParticleImage
             width="100%"
             height="100%"
+            hoverAreaScale={1.2}
             backgroundColor="transparent"
             particleCount={180}
             imageConfig={{
@@ -481,7 +563,7 @@ export default function Home() {
           Structure is not a constraint, but a design tool.
         </p>
         <div
-          className="mx-auto mt-10 max-w-2xl text-[0.7rem] leading-relaxed text-white sm:text-[0.8rem]"
+          className="mx-auto mt-10 max-w-2xl text-[1.05rem] leading-relaxed text-white sm:text-[1.2rem]"
           style={{
             fontFamily: "var(--font-noto-serif-tc), 'Source Han Serif TC', serif",
             fontWeight: 300,
@@ -547,18 +629,6 @@ export default function Home() {
           {chapter01Title[lang]}
         </h2>
       </div>
-      {/* Bottom edge aligned with the photo's own (now-halved) margin:
-          half of the old "50vh - 24.04vw". */}
-      <span
-        className="absolute right-6 text-sm text-white/70 sm:right-10"
-        style={{
-          letterSpacing: "0.1em",
-          bottom: "calc(25vh - 12.02vw)",
-          transform: `translateY(${chapter01Offset}px)`,
-        }}
-      >
-        01
-      </span>
     </section>
 
     {/* Section 4 — featured-work slider layout (reference screenshot
@@ -625,13 +695,23 @@ export default function Home() {
           thumbnail's left edge sits from the screen's left edge (6vw):
           section padding 6vw + left col 26%*88vw + gap 8%*88vw = 35.92vw
           left edge, so width = (100 - 6) - 35.92 = 58.08vw. */}
-      <div className="relative" style={{ width: "58.08vw", aspectRatio: "2600 / 1231" }}>
-        <Image
-          src={`${basePath}/photos/restore-main.jpg`}
-          alt="原型修復"
-          fill
-          className="object-cover"
-        />
+      <div className="flex flex-col items-start" style={{ width: "58.08vw" }}>
+        <div className="relative w-full" style={{ aspectRatio: "2600 / 1231" }}>
+          <Image
+            src={`${basePath}/photos/restore-main.jpg`}
+            alt="原型修復"
+            fill
+            className="object-cover"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpenMore("restore")}
+          className="mt-6 cursor-pointer rounded-full border border-white/40 px-5 py-2 text-xs text-white transition-colors hover:bg-white hover:text-black"
+          style={{ letterSpacing: "0.15em", fontWeight: 300 }}
+        >
+          MORE
+        </button>
       </div>
     </section>
 
@@ -680,20 +760,6 @@ export default function Home() {
           {chapter02Title[lang]}
         </h2>
       </div>
-      {/* Bottom edge aligned with the photo's own bottom edge, recomputed
-          for the new width-matched-to-Chapter-01 size: height =
-          (2263/1273 ratio) of width "83.20vh + 40vw" = 46.80vh + 22.50vw,
-          so the margin is (100vh - that) / 2 = 26.60vh - 11.25vw. */}
-      <span
-        className="absolute right-6 text-sm text-white/70 sm:right-10"
-        style={{
-          letterSpacing: "0.1em",
-          bottom: "calc(26.60vh - 11.25vw)",
-          transform: `translateY(${chapter02Offset}px)`,
-        }}
-      >
-        02
-      </span>
     </section>
 
     {/* Section 5 — same featured-work slider template as section 4. */}
@@ -750,13 +816,23 @@ export default function Home() {
 
       {/* Fixed photo, native ratio (2600x1235), same 58.08vw width formula
           as section 4 (layout proportions are identical). */}
-      <div className="relative" style={{ width: "58.08vw", aspectRatio: "2600 / 1235" }}>
-        <Image
-          src={`${basePath}/photos/detail-main.jpg`}
-          alt="原型細部"
-          fill
-          className="object-cover"
-        />
+      <div className="flex flex-col items-start" style={{ width: "58.08vw" }}>
+        <div className="relative w-full" style={{ aspectRatio: "2600 / 1235" }}>
+          <Image
+            src={`${basePath}/photos/detail-main.jpg`}
+            alt="原型細部"
+            fill
+            className="object-cover"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpenMore("detail")}
+          className="mt-6 cursor-pointer rounded-full border border-white/40 px-5 py-2 text-xs text-white transition-colors hover:bg-white hover:text-black"
+          style={{ letterSpacing: "0.15em", fontWeight: 300 }}
+        >
+          MORE
+        </button>
       </div>
     </section>
 
@@ -803,20 +879,6 @@ export default function Home() {
           {chapter03Title[lang]}
         </h2>
       </div>
-      {/* Bottom edge aligned with the photo's own bottom edge, same formula
-          as Chapter 01/02: height = (3072/4608 ratio) of width
-          "83.20vh + 40vw" = 55.47vh + 26.67vw, so the margin is
-          (100vh - that) / 2 = 22.27vh - 13.33vw. */}
-      <span
-        className="absolute right-6 text-sm text-white/70 sm:right-10"
-        style={{
-          letterSpacing: "0.1em",
-          bottom: "calc(22.27vh - 13.33vw)",
-          transform: `translateY(${chapter03Offset}px)`,
-        }}
-      >
-        03
-      </span>
     </section>
 
     {/* Section 7 — same featured-work slider template as section 4/5. */}
@@ -873,17 +935,42 @@ export default function Home() {
 
       {/* Fixed photo — IMG_2779, cropped to the same 2600x1231 size as the
           原型修復/原型細部 main photos above, same 58.08vw width formula. */}
-      <div className="relative" style={{ width: "58.08vw", aspectRatio: "2600 / 1231" }}>
-        <Image
-          src={`${basePath}/photos/exhibit-main.jpg`}
-          alt="原型展覽"
-          fill
-          className="object-cover"
-        />
+      <div className="flex flex-col items-start" style={{ width: "58.08vw" }}>
+        <div className="relative w-full" style={{ aspectRatio: "2600 / 1231" }}>
+          <Image
+            src={`${basePath}/photos/exhibit-main.jpg`}
+            alt="原型展覽"
+            fill
+            className="object-cover"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpenMore("exhibit")}
+          className="mt-6 cursor-pointer rounded-full border border-white/40 px-5 py-2 text-xs text-white transition-colors hover:bg-white hover:text-black"
+          style={{ letterSpacing: "0.15em", fontWeight: 300 }}
+        >
+          MORE
+        </button>
       </div>
     </section>
 
     <Footer />
+
+    <MoreOverlay
+      open={openMore !== null}
+      links={openMore ? MORE_LINKS[openMore] : []}
+      onClose={() => setOpenMore(null)}
+      onOpenGallery={(images) => {
+        setOpenMore(null);
+        setOpenGallery(images);
+      }}
+    />
+    <GalleryOverlay
+      open={openGallery !== null}
+      images={openGallery ?? []}
+      onClose={() => setOpenGallery(null)}
+    />
     </>
   );
 }
