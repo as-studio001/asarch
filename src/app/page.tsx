@@ -5,8 +5,8 @@ import Image from "next/image";
 import ParticleImage from "@/components/originkit/ui/svgparticles";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import MoreOverlay, { type MoreLink } from "@/components/MoreOverlay";
 import GalleryOverlay from "@/components/GalleryOverlay";
+import CaseCard from "@/components/CaseCard";
 import { useLanguage } from "@/lib/i18n";
 import {
   manifestoHeadlineLines,
@@ -116,6 +116,13 @@ const EXHIBIT_THUMBS = [
 ];
 const EXHIBIT_THUMB_INTERVAL_MS = 2000;
 
+// Section 9 (Chapter 04, 原型數位) thumbnail carousel — same template as
+// the other chapters, but left empty (no reused/placeholder photos) per
+// explicit request; the carousel box just renders blank until real
+// filenames are added here.
+const DIGITAL_THUMBS: string[] = [];
+const DIGITAL_THUMB_INTERVAL_MS = 2000;
+
 // ADA建築展 masonry-gallery photos.
 const ADA_GALLERY = [
   "gallery-ada-1.jpg",
@@ -145,29 +152,65 @@ const TAIPEI_GALLERY = Array.from(
   (_, i) => `gallery-taipei-${i + 1}.jpg`
 );
 
-// "MORE" button (below each chapter's main slider photo) pops up this row
-// of buttons over a dark backdrop. Placeholder labels/links for now — swap
-// in the real ones once they're supplied, count isn't fixed to 3.
-const MORE_LINKS: Record<"restore" | "detail" | "exhibit", MoreLink[]> = {
-  restore: [
-    { label: "信義街咾咕石‧芳宅", href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=622507" },
-    { label: "嘉義實驗木場", href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=582351" },
-    { label: "原型事務所", href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=506003" },
-  ],
-  detail: [
-    { label: "接合", href: "#" },
-    { label: "材料", href: "#" },
-    { label: "工法", href: "#" },
-    { label: "施工", href: "#" },
-  ],
-  exhibit: [
-    { label: "好感空間展", href: "https://www.tnhs.com.tw/" },
-    { label: "ADA建築展", gallery: ADA_GALLERY },
-    { label: "構竹林鐵", gallery: BAMBOO_GALLERY },
-    { label: "台北藝廊展", gallery: TAIPEI_GALLERY },
-    { label: "台南建築三年展", href: "https://asas2026.wixsite.com/mysite/%E5%89%AF%E6%9C%AC-%E5%B1%95%E8%A6%BD%E6%B4%BB%E5%8B%95" },
-  ],
-};
+// Section 4.5 case cards (replaces the old restore "MORE" popup — cases
+// now get their own section instead of a modal). Images are placeholders
+// (reusing existing thumbnails) until real per-case photos are supplied.
+const RESTORE_CASES = [
+  {
+    label: "信義街咾咕石‧芳宅",
+    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=622507",
+    image: "case-restore-xinyi.jpg",
+  },
+  {
+    label: "嘉義實驗木場",
+    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=582351",
+    image: "case-restore-woodyard.jpg",
+  },
+  {
+    label: "原型事務所",
+    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=506003",
+    image: "case-restore-office.jpg",
+  },
+];
+
+// Section 7.5 case cards (same treatment as RESTORE_CASES/Section 4.5, now
+// applied to 原型展覽). Three of the five open the masonry GalleryOverlay
+// instead of linking out — same split the old exhibit MORE popup had.
+const EXHIBIT_CASES = [
+  {
+    label: "好感空間展",
+    href: "https://www.tnhs.com.tw/",
+    image: "case-exhibit-tnhs.jpg",
+  },
+  {
+    label: "ADA建築展",
+    gallery: ADA_GALLERY,
+    image: "gallery-ada-1.jpg",
+  },
+  {
+    label: "構竹林鐵",
+    gallery: BAMBOO_GALLERY,
+    image: "case-exhibit-bamboo.jpg",
+  },
+  {
+    label: "台北藝廊展",
+    gallery: TAIPEI_GALLERY,
+    image: "gallery-taipei-1.jpg",
+  },
+  // 台南建築三年展 cancelled for now — drop back in with `{ label:
+  // "台南建築三年展", href: "https://asas2026.wixsite.com/mysite/...", image: "..." }`
+  // if it comes back.
+];
+
+// Section 5.5 case cards (same treatment as RESTORE_CASES/EXHIBIT_CASES —
+// this replaces the last remaining MORE popup, so MoreOverlay/MORE_LINKS/
+// openMore are gone now). Links still placeholders pending real ones.
+const DETAIL_CASES = [
+  { label: "接合", href: "#", image: "case-detail-joint.jpg" },
+  { label: "材料", href: "#", image: "case-detail-material.jpg" },
+  { label: "工法", href: "#", image: "case-detail-method.jpg" },
+  { label: "施工", href: "#", image: "case-detail-construction.jpg" },
+];
 
 // Chapter photo parallax (shared by Chapter 01 and 02): max vertical drift
 // (px) and how much of the section's distance from viewport-center
@@ -187,10 +230,12 @@ export default function Home() {
   const [chapter02Offset, setChapter02Offset] = useState(0);
   const chapter03Ref = useRef<HTMLElement>(null);
   const [chapter03Offset, setChapter03Offset] = useState(0);
+  const chapter04Ref = useRef<HTMLElement>(null);
+  const [chapter04Offset, setChapter04Offset] = useState(0);
   const [restoreThumbIndex, setRestoreThumbIndex] = useState(0);
   const [detailThumbIndex, setDetailThumbIndex] = useState(0);
   const [exhibitThumbIndex, setExhibitThumbIndex] = useState(0);
-  const [openMore, setOpenMore] = useState<null | "restore" | "detail" | "exhibit">(null);
+  const [digitalThumbIndex, setDigitalThumbIndex] = useState(0);
   const [openGallery, setOpenGallery] = useState<string[] | null>(null);
   // 0 = just landed (only roof/beam + wall-above-boundary visible, rest
   // hidden under the fade), 1 = fully scrolled through (photo fully lit —
@@ -347,6 +392,37 @@ export default function Home() {
     };
   }, []);
 
+  // Chapter 04 photo: same parallax sway as Chapter 01/02/03.
+  useEffect(() => {
+    const el = chapter04Ref.current;
+    if (!el) return;
+    let raf = 0;
+    const compute = () => {
+      raf = 0;
+      const rect = el.getBoundingClientRect();
+      const sectionCenter = rect.top + rect.height / 2;
+      const viewportCenter = window.innerHeight / 2;
+      const distance = sectionCenter - viewportCenter;
+      const offset = Math.max(
+        -CHAPTER01_PARALLAX_MAX_PX,
+        Math.min(CHAPTER01_PARALLAX_MAX_PX, distance * CHAPTER01_PARALLAX_FACTOR)
+      );
+      setChapter04Offset(offset);
+    };
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(compute);
+    };
+    compute();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   // Section 4 thumbnail: auto-advances every 2s; the prev/next arrows also
   // just move this same index, restarting the timer so it doesn't double up.
   useEffect(() => {
@@ -379,6 +455,28 @@ export default function Home() {
   const showNextExhibitThumb = () =>
     setExhibitThumbIndex((i) => (i + 1) % EXHIBIT_THUMBS.length);
 
+  // Section 9 thumbnail: same auto-advance/nav pattern as the other
+  // chapters — no-ops for now since DIGITAL_THUMBS is empty (guards against
+  // the modulo-by-zero that'd otherwise happen once real filenames land).
+  useEffect(() => {
+    if (DIGITAL_THUMBS.length === 0) return;
+    const id = setInterval(() => {
+      setDigitalThumbIndex((i) => (i + 1) % DIGITAL_THUMBS.length);
+    }, DIGITAL_THUMB_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [digitalThumbIndex]);
+
+  const showPrevDigitalThumb = () => {
+    if (DIGITAL_THUMBS.length === 0) return;
+    setDigitalThumbIndex(
+      (i) => (i - 1 + DIGITAL_THUMBS.length) % DIGITAL_THUMBS.length
+    );
+  };
+  const showNextDigitalThumb = () => {
+    if (DIGITAL_THUMBS.length === 0) return;
+    setDigitalThumbIndex((i) => (i + 1) % DIGITAL_THUMBS.length);
+  };
+
   const showPrevDetailThumb = () =>
     setDetailThumbIndex(
       (i) => (i - 1 + DETAIL_THUMBS.length) % DETAIL_THUMBS.length
@@ -386,19 +484,15 @@ export default function Home() {
   const showNextDetailThumb = () =>
     setDetailThumbIndex((i) => (i + 1) % DETAIL_THUMBS.length);
 
-  // Escape closes whichever overlay (MORE buttons or the photo gallery) is
-  // open, same as clicking the backdrop. Gallery takes priority since it's
-  // the one stacked on top when both could theoretically be set.
+  // Escape closes the photo gallery overlay, same as clicking the backdrop.
   useEffect(() => {
-    if (!openMore && !openGallery) return;
+    if (!openGallery) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (openGallery) setOpenGallery(null);
-      else setOpenMore(null);
+      if (e.key === "Escape") setOpenGallery(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openMore, openGallery]);
+  }, [openGallery]);
 
   const showPrevRestoreThumb = () =>
     setRestoreThumbIndex(
@@ -509,6 +603,12 @@ export default function Home() {
             width="100%"
             height="100%"
             hoverAreaScale={1.2}
+            // Particles stay permanently assembled into the image instead
+            // of roaming/scattering when the cursor leaves — hoverEnabled
+            // only gates the assemble/scatter animation state, not the
+            // repulsion "push away from cursor" effect (repulsionEnabled,
+            // untouched below), so that sliding interactivity is unaffected.
+            hoverEnabled={false}
             backgroundColor="transparent"
             particleCount={180}
             imageConfig={{
@@ -636,8 +736,14 @@ export default function Home() {
         all 6 candidate photos, auto-advancing every 2s or via the arrows),
         title, description. Right: the main photo, fixed (never changes),
         kept at its own native aspect ratio rather than cropped. Title/copy
-        text are still placeholders pending real copy. */}
-    <section className="flex h-screen w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
+        text are still placeholders pending real copy.
+        Deliberately NOT h-screen (per explicit request, demo for 原型修復
+        only) — sized to its own content like Section 4.5/CASES below it,
+        otherwise the leftover dead space from forcing full-viewport height
+        made the visual gap to CASES ~12.5cm instead of the intended 1cm
+        (CASES's own top padding supplies that 1cm now that this section
+        no longer pads out the rest of the screen). */}
+    <section className="flex w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
       <div className="flex w-[26%] flex-col">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
           {RESTORE_THUMBS.map((src, i) => (
@@ -662,7 +768,7 @@ export default function Home() {
         >
           {restoreSliderLabel[lang]}｜Restoration
         </h3>
-        <p className="mt-4 text-xs leading-relaxed text-white/70">
+        <p className="mt-4 text-[0.9rem] leading-relaxed text-white/70">
           {restoreDescription[lang]}
         </p>
         <div className="mt-8 flex items-center gap-6 text-white/60">
@@ -704,14 +810,25 @@ export default function Home() {
             className="object-cover"
           />
         </div>
-        <button
-          type="button"
-          onClick={() => setOpenMore("restore")}
-          className="mt-6 cursor-pointer rounded-full border border-white/40 px-5 py-2 text-xs text-white transition-colors hover:bg-white hover:text-black"
-          style={{ letterSpacing: "0.15em", fontWeight: 300 }}
-        >
-          MORE
-        </button>
+      </div>
+    </section>
+
+    {/* Section 4.5 — replaces the old restore "MORE" popup: cases now get
+        their own band instead of a modal, per explicit request. Demo for
+        原型修復 only for now — same treatment to be applied to 原型細部/
+        原型展覽 once this is approved. Deliberately NOT h-screen like the
+        other bands — its content is much shorter than 100vh, and forcing
+        full-viewport height left a huge dead gap below the cards before
+        the next section; sized to its own content instead, with a fixed
+        1cm gap to the sections above/below. */}
+    <section className="flex w-full flex-col items-center gap-16 bg-black px-[6%] py-[1cm]">
+      <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
+        CASES
+      </span>
+      <div className="flex w-full items-start justify-center gap-[4%]">
+        {RESTORE_CASES.map((c) => (
+          <CaseCard key={c.label} label={c.label} image={c.image} href={c.href} widthClass="w-[26%]" />
+        ))}
       </div>
     </section>
 
@@ -762,8 +879,10 @@ export default function Home() {
       </div>
     </section>
 
-    {/* Section 5 — same featured-work slider template as section 4. */}
-    <section className="flex h-screen w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
+    {/* Section 5 — same featured-work slider template as section 4.
+        Deliberately NOT h-screen (matching Section 4/7's demo) — sized to
+        its own content so Section 5.5/CASES sits a clean 1cm below it. */}
+    <section className="flex w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
       <div className="flex w-[26%] flex-col">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
           {DETAIL_THUMBS.map((src, i) => (
@@ -787,7 +906,7 @@ export default function Home() {
         >
           {detailSliderLabel[lang]}｜Detail
         </h3>
-        <p className="mt-4 text-xs leading-relaxed text-white/70">
+        <p className="mt-4 text-[0.9rem] leading-relaxed text-white/70">
           {detailDescription[lang]}
         </p>
         <div className="mt-8 flex items-center gap-6 text-white/60">
@@ -825,14 +944,19 @@ export default function Home() {
             className="object-cover"
           />
         </div>
-        <button
-          type="button"
-          onClick={() => setOpenMore("detail")}
-          className="mt-6 cursor-pointer rounded-full border border-white/40 px-5 py-2 text-xs text-white transition-colors hover:bg-white hover:text-black"
-          style={{ letterSpacing: "0.15em", fontWeight: 300 }}
-        >
-          MORE
-        </button>
+      </div>
+    </section>
+
+    {/* Section 5.5 — replaces the old detail "MORE" popup, same treatment
+        as Section 4.5/7.5. */}
+    <section className="flex w-full flex-col items-center gap-16 bg-black px-[6%] py-[1cm]">
+      <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
+        CASES
+      </span>
+      <div className="flex w-full items-start justify-center gap-[4%]">
+        {DETAIL_CASES.map((c) => (
+          <CaseCard key={c.label} label={c.label} image={c.image} href={c.href} widthClass="w-[20%]" />
+        ))}
       </div>
     </section>
 
@@ -881,8 +1005,11 @@ export default function Home() {
       </div>
     </section>
 
-    {/* Section 7 — same featured-work slider template as section 4/5. */}
-    <section className="flex h-screen w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
+    {/* Section 7 — same featured-work slider template as section 4/5.
+        Deliberately NOT h-screen (matching Section 4's demo) — sized to
+        its own content so the following CASES band sits a clean 1cm
+        below it instead of leaving forced full-viewport dead space. */}
+    <section className="flex w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
       <div className="flex w-[26%] flex-col">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
           {EXHIBIT_THUMBS.map((src, i) => (
@@ -906,7 +1033,7 @@ export default function Home() {
         >
           {exhibitSliderLabel[lang]}｜Exhibition
         </h3>
-        <p className="mt-4 text-xs leading-relaxed text-white/70">
+        <p className="mt-4 text-[0.9rem] leading-relaxed text-white/70">
           {exhibitDescription[lang]}
         </p>
         <div className="mt-8 flex items-center gap-6 text-white/60">
@@ -944,28 +1071,134 @@ export default function Home() {
             className="object-cover"
           />
         </div>
-        <button
-          type="button"
-          onClick={() => setOpenMore("exhibit")}
-          className="mt-6 cursor-pointer rounded-full border border-white/40 px-5 py-2 text-xs text-white transition-colors hover:bg-white hover:text-black"
-          style={{ letterSpacing: "0.15em", fontWeight: 300 }}
+      </div>
+    </section>
+
+    {/* Section 7.5 — replaces the old exhibit "MORE" popup, same treatment
+        as Section 4.5. Cards that open a gallery use CaseCard's onClick
+        form; the two plain links use its href form. id targeted by the
+        header hamburger menu's ADA建築展/構竹林鐵/台北藝廊展 entries,
+        which just scroll here (the actual gallery still opens via clicking
+        the card itself, not from the header). */}
+    <section id="cases-exhibit" className="flex w-full flex-col items-center gap-16 bg-black px-[6%] py-[1cm]">
+      <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
+        CASES
+      </span>
+      <div className="flex w-full items-start justify-center gap-[2%]">
+        {EXHIBIT_CASES.map((c) => (
+          <CaseCard
+            key={c.label}
+            label={c.label}
+            image={c.image}
+            href={c.href}
+            onClick={c.gallery ? () => setOpenGallery(c.gallery) : undefined}
+            widthClass="w-[20%]"
+          />
+        ))}
+      </div>
+    </section>
+
+    {/* Chapter 04 — same template as Chapter 01/02/03. Title is hardcoded
+        (not wired into the translations.ts i18n system yet, unlike the
+        other three chapters). No photo yet, per explicit request — left
+        blank (bg-white/10, same "empty" convention as the thumbnail boxes
+        elsewhere) rather than standing in with a reused photo. Swap in a
+        real <Image> once one is supplied; aspect ratio here is a
+        placeholder guess (matches Chapter 01/02/03's width formula) and
+        may need adjusting for the real photo's actual ratio. */}
+    <section
+      ref={chapter04Ref}
+      className="relative flex h-screen w-full items-center overflow-hidden bg-black"
+    >
+      <div
+        className="relative bg-white/10"
+        style={{
+          width: "calc(83.20vh + 40vw)",
+          aspectRatio: "3200 / 1923",
+          transform: `translateY(${chapter04Offset}px)`,
+        }}
+      />
+      <div
+        className="absolute top-1/2 right-[22%] flex translate-x-[6cm] -translate-y-1/2 flex-col items-start text-left sm:right-[25%]"
+      >
+        <span
+          className="text-xs text-white/60 sm:text-sm"
+          style={{ letterSpacing: "0.3em" }}
         >
-          MORE
-        </button>
+          CHAPTER
+        </span>
+        <h2
+          className="mt-4 text-4xl leading-tight font-semibold text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] whitespace-nowrap sm:text-6xl"
+          style={{
+            fontFamily: "var(--font-noto-serif-tc), 'Source Han Serif TC', serif",
+            letterSpacing: "0.15em",
+          }}
+        >
+          原型數位
+        </h2>
+      </div>
+    </section>
+
+    {/* Section 9 — same featured-work slider template as the other
+        chapters. Deliberately NOT h-screen, same reasoning as Section 4/5/7. */}
+    <section className="flex w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
+      <div className="flex w-[26%] flex-col">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
+          {DIGITAL_THUMBS.map((src, i) => (
+            <Image
+              key={src}
+              src={`${basePath}/photos/${src}`}
+              alt={`原型數位 縮圖 ${i + 1}`}
+              fill
+              className="object-cover transition-opacity duration-700"
+              style={{ opacity: i === digitalThumbIndex ? 1 : 0 }}
+            />
+          ))}
+        </div>
+        <h3
+          className="mt-8 text-lg text-white"
+          style={{
+            fontFamily: "var(--font-noto-serif-tc), 'Source Han Serif TC', serif",
+            fontWeight: 300,
+            letterSpacing: "0.05em",
+          }}
+        >
+          原型數位｜Digital
+        </h3>
+        <p className="mt-4 text-[0.9rem] leading-relaxed text-white/70">
+          原型數位不是單純用數位工具，而是重新思考建築如何進入數位時代。從 BIM、參數化設計、AI、數位製造到資訊整合，我們將技術轉化為設計思考與工作方法。數位不是取代人的創意，而是讓想法更快被驗證、更精準地被實現。從設計圖面到資料庫、從模型到現場，我們全面使用Archicad、Rhino 試圖讓圖說與設計無縫接軌、甚至讓結構也同時一併完成。
+        </p>
+        <div className="mt-8 flex items-center gap-6 text-white/60">
+          <button
+            type="button"
+            aria-label="上一張"
+            onClick={showPrevDigitalThumb}
+            className="cursor-pointer transition-colors hover:text-white"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M15 5L8 12L15 19" stroke="currentColor" strokeWidth="1.4" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            aria-label="下一張"
+            onClick={showNextDigitalThumb}
+            className="cursor-pointer transition-colors hover:text-white"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M9 5L16 12L9 19" stroke="currentColor" strokeWidth="1.4" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-start" style={{ width: "58.08vw" }}>
+        <div className="relative w-full bg-white/10" style={{ aspectRatio: "2600 / 1231" }} />
       </div>
     </section>
 
     <Footer />
 
-    <MoreOverlay
-      open={openMore !== null}
-      links={openMore ? MORE_LINKS[openMore] : []}
-      onClose={() => setOpenMore(null)}
-      onOpenGallery={(images) => {
-        setOpenMore(null);
-        setOpenGallery(images);
-      }}
-    />
     <GalleryOverlay
       open={openGallery !== null}
       images={openGallery ?? []}

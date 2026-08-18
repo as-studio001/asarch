@@ -16,13 +16,25 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 const MATERIAL_LINKS = [
   { label: "原型首頁", href: "https://www.as-structure.com/" },
-  { label: "原型結構", href: "https://www.mashup.com.tw/as%20studio/" },
-];
-
-const NAV_LINKS = [
-  { label: "Team", href: "https://www.mashup.com.tw/as%20studio/?page=service" },
-  { label: "Film", href: "https://www.mashup.com.tw/as%20studio/?page=movies" },
-  { label: "Contact", href: "https://www.mashup.com.tw/as%20studio/?page=contact" },
+  {
+    label: "信義街咾咕石‧芳宅",
+    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=622507",
+  },
+  {
+    label: "嘉義實驗木場",
+    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=582351",
+  },
+  {
+    label: "原型事務所",
+    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=506003",
+  },
+  { label: "好感空間展", href: "https://www.tnhs.com.tw/" },
+  // These three open a photo-gallery overlay (not a plain link) when
+  // clicked on the page itself — from the header they just scroll to the
+  // exhibit CASES band, where the actual gallery card can be clicked.
+  { label: "ADA建築展", href: "#cases-exhibit" },
+  { label: "構竹林鐵", href: "#cases-exhibit" },
+  { label: "台北藝廊展", href: "#cases-exhibit" },
 ];
 
 export default function Header() {
@@ -78,8 +90,9 @@ export default function Header() {
                 <a
                   key={m.label}
                   href={m.href}
-                  target="_blank"
-                  rel="noreferrer"
+                  {...(m.href.startsWith("#")
+                    ? { onClick: () => setShowMaterialMenu(false) }
+                    : { target: "_blank", rel: "noreferrer" })}
                   className="block px-4 py-3 text-sm text-white transition-colors hover:bg-white/10"
                   style={
                     i < MATERIAL_LINKS.length - 1
@@ -122,18 +135,6 @@ export default function Header() {
           backgroundColor: "oklch(0.15 0 0 / 0.15)",
         }}
       >
-        {NAV_LINKS.map((l) => (
-          <a
-            key={l.label}
-            href={l.href}
-            target="_blank"
-            rel="noreferrer"
-            className="text-base font-medium text-white transition-opacity hover:opacity-70"
-            style={{ letterSpacing: "0.05em" }}
-          >
-            {l.label}
-          </a>
-        ))}
         <div data-lang-menu-box className="relative">
           <button
             type="button"
