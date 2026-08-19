@@ -822,7 +822,21 @@ function __OriginkitBase_ParticleImage(__props) {
             >
                 <canvas
                     ref={canvasRef}
-                    style={{ display: "block", width: "100%", height: "100%" }}
+                    style={{
+                        display: "block",
+                        width: "100%",
+                        height: "100%",
+                        // Particles are drawn pure white (sampled from the
+                        // source image), which reads fine over dark photo
+                        // areas but nearly vanishes over bright ones (sky,
+                        // window light, pale walls). A tight dark core +
+                        // wider soft halo drop-shadow gives every dot a
+                        // faint outline so it stays legible regardless of
+                        // what's behind it, without touching the particle
+                        // color/physics logic itself.
+                        filter:
+                            "drop-shadow(0 0 1.5px rgba(0,0,0,0.9)) drop-shadow(0 0 4px rgba(0,0,0,0.55))",
+                    }}
                 />
                 {!image && (
                     <div
