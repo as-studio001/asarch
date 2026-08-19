@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Serif_TC } from "next/font/google";
 import { LanguageProvider } from "@/lib/i18n";
+import IntroLoader from "@/components/IntroLoader";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${notoSerifTC.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <IntroLoader />
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
