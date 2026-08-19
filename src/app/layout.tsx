@@ -39,8 +39,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${notoSerifTC.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <IntroLoader />
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          <IntroLoader>{children}</IntroLoader>
+        </LanguageProvider>
       </body>
     </html>
   );

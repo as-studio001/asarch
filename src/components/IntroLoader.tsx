@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -58,12 +58,24 @@ const PRELOAD_PHOTOS = [
   "gallery-taipei-1.jpg",
 ];
 
-// Full-screen loading gate: the intro video loops (not "plays once then
-// reveals" like the sibling site's version — this one is functional, not
-// just decorative) with "加載中..." pinned bottom-right, until every photo
-// above has finished loading (or errored — a broken image shouldn't hang
-// the site forever), then fades out over 0.6s and unmounts.
-export default function IntroLoader() {
+// Full-screen loading gate wrapping the whole site: the intro video loops
+// (not "plays once then reveals" like the sibling site's version — this
+// one is functional, not just decorative) with "加載中..." pinned
+// bottom-right, until every photo above has finished loading (or errored —
+// a broken image shouldn't hang the site forever).
+//
+// `children` are rendered (mounted) the entire time, but kept
+// visibility:hidden — NOT display:none, which would break the particle
+// canvas's ResizeObserver-based sizing — until ready. Earlier this
+// component only drew an opaque overlay ON TOP of the page instead of
+// actually hiding it, so the page's own animations (hero SVG particles
+// assembling, the sticky-scroll reveal) were already running underneath
+// from the very first frame; by the time the loader faded out they'd
+// already played part of their own intro, which read as the video's loop
+// "splitting into two segments" — one default pass, then the loading one.
+// Hiding children until `ready` means their effects/animations only start
+// once actually revealed.
+export default function IntroLoader({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [hidden, setHidden] = useState(false);
 
@@ -95,32 +107,35 @@ export default function IntroLoader() {
     return () => clearTimeout(t);
   }, [ready]);
 
-  if (hidden) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black"
-      style={{
-        opacity: ready ? 0 : 1,
-        pointerEvents: ready ? "none" : "auto",
-        transition: "opacity 0.6s ease",
-      }}
-    >
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        className="h-full w-full object-cover"
-        src={`${basePath}/videos/intro.mp4`}
-      />
-      <div
-        className="absolute right-6 bottom-6 text-xs text-white/80"
-        style={{ letterSpacing: "0.1em" }}
-      >
-        加載中...
-      </div>
-    </div>
+    <>
+      {!hidden && (
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black"
+          style={{
+            opacity: ready ? 0 : 1,
+            pointerEvents: ready ? "none" : "auto",
+            transition: "opacity 0.6s ease",
+          }}
+        >
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            className="h-full w-full object-cover"
+            src={`${basePath}/videos/intro.mp4`}
+          />
+          <div
+            className="absolute right-6 bottom-6 text-xs text-white/80"
+            style={{ letterSpacing: "0.1em" }}
+          >
+            加載中...
+          </div>
+        </div>
+      )}
+      <div style={{ visibility: ready ? "visible" : "hidden" }}>{children}</div>
+    </>
   );
 }
