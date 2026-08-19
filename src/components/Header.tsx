@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { LANGUAGES, useLanguage } from "@/lib/i18n";
+import { externalLinkProps } from "@/lib/links";
 
 // Mirrors the header from the original AS studio homepage
 // (原型教學轉code/design_handoff_architecture_site/建築事務所首頁.dc.html),
@@ -90,9 +91,8 @@ export default function Header() {
                 <a
                   key={m.label}
                   href={m.href}
-                  {...(m.href.startsWith("#")
-                    ? { onClick: () => setShowMaterialMenu(false) }
-                    : { target: "_blank", rel: "noreferrer" })}
+                  onClick={() => setShowMaterialMenu(false)}
+                  {...externalLinkProps(m.href)}
                   className="block px-4 py-3 text-sm text-white transition-colors hover:bg-white/10"
                   style={
                     i < MATERIAL_LINKS.length - 1

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { externalLinkProps } from "@/lib/links";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -55,9 +56,7 @@ export default function CaseCard({
   return (
     <a
       href={href ?? "#"}
-      {...(href && href !== "#"
-        ? { target: "_blank", rel: "noopener noreferrer" }
-        : {})}
+      {...externalLinkProps(href ?? "#")}
       className={className}
     >
       {inner}
