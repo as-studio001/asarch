@@ -29,6 +29,11 @@ const MATERIAL_LINKS = [
     label: "原型事務所",
     href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=506003",
   },
+  { label: "原型1號宅", href: "https://asstudio029.wixsite.com/ashouse1" },
+  {
+    label: "億載金城入口意象",
+    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=609194",
+  },
   { label: "好感空間展", href: "https://www.tnhs.com.tw/" },
   // These three open a photo-gallery overlay (not a plain link) when
   // clicked on the page itself — from the header they just scroll to the

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import ParticleImage from "@/components/originkit/ui/svgparticles";
+import RotatingGlobe from "@/components/originkit/ui/RotatingGlobe";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import GalleryOverlay from "@/components/GalleryOverlay";
@@ -21,6 +22,7 @@ import {
   restoreDescription,
   detailDescription,
   exhibitDescription,
+  caseLabels,
 } from "@/content/translations";
 
 // Raw asset paths (unlike next/link) aren't auto-prefixed with basePath for
@@ -85,6 +87,9 @@ const RESTORE_THUMBS = [
   "restore-thumb-6.jpg",
   "restore-thumb-7.jpg",
   "restore-thumb-8.jpg",
+  "restore-thumb-9.jpg",
+  "restore-thumb-10.jpg",
+  "restore-thumb-11.jpg",
 ];
 const RESTORE_THUMB_INTERVAL_MS = 2000;
 
@@ -99,6 +104,10 @@ const DETAIL_THUMBS = [
   "detail-thumb-7.jpg",
   "detail-thumb-8.jpg",
   "detail-thumb-9.jpg",
+  "detail-thumb-10.jpg",
+  "detail-thumb-11.jpg",
+  "detail-thumb-12.jpg",
+  "detail-thumb-13.jpg",
 ];
 const DETAIL_THUMB_INTERVAL_MS = 2000;
 
@@ -117,10 +126,13 @@ const EXHIBIT_THUMBS = [
 const EXHIBIT_THUMB_INTERVAL_MS = 2000;
 
 // Section 9 (Chapter 04, 原型數位) thumbnail carousel — same template as
-// the other chapters, but left empty (no reused/placeholder photos) per
-// explicit request; the carousel box just renders blank until real
-// filenames are added here.
-const DIGITAL_THUMBS: string[] = [];
+// the other chapters.
+const DIGITAL_THUMBS: string[] = [
+  "digital-thumb-1.jpg",
+  "digital-thumb-2.jpg",
+  "digital-thumb-3.jpg",
+  "digital-thumb-4.jpg",
+];
 const DIGITAL_THUMB_INTERVAL_MS = 2000;
 
 // ADA建築展 masonry-gallery photos.
@@ -157,17 +169,17 @@ const TAIPEI_GALLERY = Array.from(
 // (reusing existing thumbnails) until real per-case photos are supplied.
 const RESTORE_CASES = [
   {
-    label: "台南硓𥑮石．芳宅",
+    key: "restore-xinyi",
     href: "https://as-studio001.github.io/Internal-Pages/",
     image: "case-restore-xinyi.jpg",
   },
   {
-    label: "嘉義實驗木場",
+    key: "restore-woodyard",
     href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=582351",
     image: "case-restore-woodyard.jpg",
   },
   {
-    label: "原型事務所",
+    key: "restore-office",
     href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=506003",
     image: "case-restore-office.jpg",
   },
@@ -178,38 +190,75 @@ const RESTORE_CASES = [
 // instead of linking out — same split the old exhibit MORE popup had.
 const EXHIBIT_CASES = [
   {
-    label: "好感空間展",
+    key: "exhibit-tnhs",
     href: "https://www.tnhs.com.tw/",
     image: "case-exhibit-tnhs.jpg",
   },
   {
-    label: "ADA建築展",
+    key: "exhibit-ada",
     gallery: ADA_GALLERY,
     image: "gallery-ada-1.jpg",
   },
   {
-    label: "構竹林鐵",
+    key: "exhibit-bamboo",
     gallery: BAMBOO_GALLERY,
     image: "case-exhibit-bamboo.jpg",
   },
   {
-    label: "台北藝廊展",
+    key: "exhibit-taipei",
     gallery: TAIPEI_GALLERY,
     image: "gallery-taipei-1.jpg",
   },
-  // 台南建築三年展 cancelled for now — drop back in with `{ label:
-  // "台南建築三年展", href: "https://asas2026.wixsite.com/mysite/...", image: "..." }`
-  // if it comes back.
+  // 台南建築三年展 cancelled for now — drop back in with `{ key:
+  // "exhibit-triennial", href: "https://asas2026.wixsite.com/mysite/...",
+  // image: "..." }` (plus a matching entry in caseLabels) if it comes back.
 ];
 
 // Section 5.5 case cards (same treatment as RESTORE_CASES/EXHIBIT_CASES —
 // this replaces the last remaining MORE popup, so MoreOverlay/MORE_LINKS/
 // openMore are gone now). Links still placeholders pending real ones.
 const DETAIL_CASES = [
-  { label: "接合", href: "#", image: "case-detail-joint.jpg" },
-  { label: "材料", href: "#", image: "case-detail-material.jpg" },
-  { label: "工法", href: "#", image: "case-detail-method.jpg" },
-  { label: "施工", href: "#", image: "case-detail-construction.jpg" },
+  {
+    key: "detail-proto1",
+    href: "https://asstudio029.wixsite.com/ashouse1",
+    image: "case-detail-proto1.jpg",
+  },
+  {
+    key: "detail-yizai",
+    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=609194",
+    image: "case-detail-yizai.jpg",
+  },
+];
+
+// Section 9.5 case cards (same treatment as the other chapters' CASES
+// bands). Unlike its EXHIBIT_CASES entry, "構竹林鐵" here links straight
+// out rather than opening BAMBOO_GALLERY, per explicit request.
+const DIGITAL_CASES = [
+  {
+    key: "digital-woodyard",
+    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=582351",
+    image: "case-digital-woodyard.jpg",
+  },
+  {
+    key: "digital-bamboo",
+    href: "https://astaiwan.wixsite.com/bamboo-newfield",
+    image: "case-digital-bamboo.jpg",
+  },
+  {
+    key: "digital-future",
+    href: "https://www.as-structure.com/",
+    image: "case-digital-future.jpg",
+  },
+  {
+    key: "digital-proto1",
+    href: "https://asstudio029.wixsite.com/ashouse1",
+    image: "case-digital-proto1.jpg",
+  },
+  {
+    key: "digital-xinyi",
+    href: "https://asas2026.wixsite.com/mysite/%E6%96%B0%E7%94%9F%E5%A0%B4%E5%9F%9F",
+    image: "case-digital-xinyi.jpg",
+  },
 ];
 
 // Chapter photo parallax (shared by Chapter 01 and 02): max vertical drift
@@ -456,8 +505,9 @@ export default function Home() {
     setExhibitThumbIndex((i) => (i + 1) % EXHIBIT_THUMBS.length);
 
   // Section 9 thumbnail: same auto-advance/nav pattern as the other
-  // chapters — no-ops for now since DIGITAL_THUMBS is empty (guards against
-  // the modulo-by-zero that'd otherwise happen once real filenames land).
+  // chapters. Length guards kept even now that DIGITAL_THUMBS is populated
+  // — harmless, and they protect against a future modulo-by-zero if it's
+  // ever emptied again.
   useEffect(() => {
     if (DIGITAL_THUMBS.length === 0) return;
     const id = setInterval(() => {
@@ -827,7 +877,13 @@ export default function Home() {
       </span>
       <div className="flex w-full items-start justify-center gap-[4%]">
         {RESTORE_CASES.map((c) => (
-          <CaseCard key={c.label} label={c.label} image={c.image} href={c.href} widthClass="w-[26%]" />
+          <CaseCard
+            key={c.key}
+            label={caseLabels[c.key][lang]}
+            image={c.image}
+            href={c.href}
+            widthClass="w-[26%]"
+          />
         ))}
       </div>
     </section>
@@ -955,7 +1011,13 @@ export default function Home() {
       </span>
       <div className="flex w-full items-start justify-center gap-[4%]">
         {DETAIL_CASES.map((c) => (
-          <CaseCard key={c.label} label={c.label} image={c.image} href={c.href} widthClass="w-[20%]" />
+          <CaseCard
+            key={c.key}
+            label={caseLabels[c.key][lang]}
+            image={c.image}
+            href={c.href}
+            widthClass="w-[26%]"
+          />
         ))}
       </div>
     </section>
@@ -1087,8 +1149,8 @@ export default function Home() {
       <div className="flex w-full items-start justify-center gap-[2%]">
         {EXHIBIT_CASES.map((c) => (
           <CaseCard
-            key={c.label}
-            label={c.label}
+            key={c.key}
+            label={caseLabels[c.key][lang]}
             image={c.image}
             href={c.href}
             onClick={c.gallery ? () => setOpenGallery(c.gallery) : undefined}
@@ -1111,13 +1173,23 @@ export default function Home() {
       className="relative flex h-screen w-full items-center overflow-hidden bg-black"
     >
       <div
-        className="relative bg-white/10"
+        className="relative flex items-center justify-center"
         style={{
           width: "calc(83.20vh + 40vw)",
           aspectRatio: "3200 / 1923",
           transform: `translateY(${chapter04Offset}px)`,
         }}
-      />
+      >
+        {/* Ported from the main site's mobile-dark-mode rotating globe
+            widget (see RotatingGlobe.tsx) — drag to rotate only, no
+            zoom/search/click, per explicit request. Square component
+            capped to the banner's own height so it fits centered inside
+            this wider-than-tall box. */}
+        <RotatingGlobe
+          className="h-full"
+          style={{ aspectRatio: "1 / 1", transform: "translateX(-2cm)" }}
+        />
+      </div>
       <div
         className="absolute top-1/2 right-[22%] flex translate-x-[6cm] -translate-y-1/2 flex-col items-start text-left sm:right-[25%]"
       >
@@ -1193,7 +1265,32 @@ export default function Home() {
       </div>
 
       <div className="flex flex-col items-start" style={{ width: "58.08vw" }}>
-        <div className="relative w-full bg-white/10" style={{ aspectRatio: "2600 / 1231" }} />
+        <div className="relative w-full" style={{ aspectRatio: "2600 / 1231" }}>
+          <Image
+            src={`${basePath}/photos/digital-main.jpg`}
+            alt="原型數位"
+            fill
+            className="object-cover"
+          />
+        </div>
+      </div>
+    </section>
+
+    {/* Section 9.5 — same treatment as Section 4.5/5.5/7.5. */}
+    <section className="flex w-full flex-col items-center gap-16 bg-black px-[6%] py-[1cm]">
+      <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
+        CASES
+      </span>
+      <div className="flex w-full items-start justify-center gap-[4%]">
+        {DIGITAL_CASES.map((c) => (
+          <CaseCard
+            key={c.key}
+            label={caseLabels[c.key][lang]}
+            image={c.image}
+            href={c.href}
+            widthClass="w-[16%]"
+          />
+        ))}
       </div>
     </section>
 

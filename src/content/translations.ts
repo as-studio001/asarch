@@ -148,3 +148,112 @@ export const exhibitDescription: Localized = {
   ko:
     "전시는 건축이 건물을 떠난 뒤, 더 많은 사람들과 대화하는 방법이자 경계 없는 영역이 되기도 합니다. 프로토타입 전시는 건축, 구조, 재료, 연구를 보고 이해하고 참여할 수 있는 콘텐츠로 전환합니다. 완성된 작품뿐 아니라 디자인이 어떻게 일어나고 문제가 어떻게 해결되는지도 보여줍니다. 전시, 출판, 강연, 모형, 공간 실험을 통해 전문 지식을 공공의 언어로 바꾸어, 건축이 논의되고 이해되며 다음 디자인의 프로토타입이 되도록 합니다.",
 };
+
+// Labels for the CASES-band cards (RESTORE_CASES/DETAIL_CASES/EXHIBIT_CASES
+// in page.tsx), keyed by a stable id rather than the zh-Hant text itself —
+// page.tsx looks these up as caseLabels[c.key][lang] at render time, since
+// the CASES arrays are module-level consts defined outside the component
+// (before useLanguage()'s lang is available).
+export const caseLabels: Record<string, Localized> = {
+  "restore-xinyi": {
+    "zh-Hant": "台南硓𥑮石．芳宅",
+    "zh-Hans": "台南硓𥑮石．芳宅",
+    en: "Tainan Coral-Stone Fang House",
+    ja: "台南珊瑚礁石・芳邸",
+    ko: "타이난 산호석・팡 주택",
+  },
+  "restore-woodyard": {
+    "zh-Hant": "嘉義實驗木場",
+    "zh-Hans": "嘉义实验木场",
+    en: "Chiayi Experimental Wood Workshop",
+    ja: "嘉義実験木材工房",
+    ko: "자이 실험목재공방",
+  },
+  "restore-office": {
+    "zh-Hant": "原型事務所",
+    "zh-Hans": "原型事务所",
+    en: "AS Studio Office",
+    ja: "原型構造事務所",
+    ko: "원형구조사무소",
+  },
+  "detail-proto1": {
+    "zh-Hant": "原型1號宅",
+    "zh-Hans": "原型1号宅",
+    en: "Prototype House No. 1",
+    ja: "プロトタイプ1号邸",
+    ko: "프로토타입 1호 주택",
+  },
+  "detail-yizai": {
+    "zh-Hant": "億載金城入口意象",
+    "zh-Hans": "亿载金城入口意象",
+    en: "Yizaijincheng Fort Entrance Landmark",
+    ja: "億載金城 入口イメージ",
+    ko: "이짜이진청 요새 입구 랜드마크",
+  },
+  "exhibit-tnhs": {
+    "zh-Hant": "好感空間展",
+    "zh-Hans": "好感空间展",
+    en: "\"Good Feeling Space\" Exhibition",
+    ja: "好感空間展",
+    ko: "호감공간전",
+  },
+  "exhibit-ada": {
+    "zh-Hant": "ADA建築展",
+    "zh-Hans": "ADA建筑展",
+    en: "ADA Architecture Exhibition",
+    ja: "ADA建築展",
+    ko: "ADA 건축전",
+  },
+  "exhibit-bamboo": {
+    "zh-Hant": "構竹林鐵",
+    "zh-Hans": "构竹林铁",
+    en: "Bamboo Forest Railway",
+    ja: "構竹林鉄",
+    ko: "대나무 숲 철도",
+  },
+  "exhibit-taipei": {
+    "zh-Hant": "台北藝廊展",
+    "zh-Hans": "台北画廊展",
+    en: "Taipei Gallery Exhibition",
+    ja: "台北ギャラリー展",
+    ko: "타이베이 갤러리전",
+  },
+  // Chapter 04 (原型數位) CASES — 嘉義實驗木場/構竹林鐵/原型1號宅/台南硓𥑮石．
+  // 芳宅 reuse the exact same case names as their restore/exhibit CASES
+  // entries above, so they share those same translated strings verbatim.
+  "digital-woodyard": {
+    "zh-Hant": "嘉義實驗木場",
+    "zh-Hans": "嘉义实验木场",
+    en: "Chiayi Experimental Wood Workshop",
+    ja: "嘉義実験木材工房",
+    ko: "자이 실험목재공방",
+  },
+  "digital-bamboo": {
+    "zh-Hant": "構竹林鐵",
+    "zh-Hans": "构竹林铁",
+    en: "Bamboo Forest Railway",
+    ja: "構竹林鉄",
+    ko: "대나무 숲 철도",
+  },
+  "digital-future": {
+    "zh-Hant": "原型未來",
+    "zh-Hans": "原型未来",
+    en: "Prototype Future",
+    ja: "プロトタイプ未来",
+    ko: "프로토타입 미래",
+  },
+  "digital-proto1": {
+    "zh-Hant": "原型1號宅",
+    "zh-Hans": "原型1号宅",
+    en: "Prototype House No. 1",
+    ja: "プロトタイプ1号邸",
+    ko: "프로토타입 1호 주택",
+  },
+  "digital-xinyi": {
+    "zh-Hant": "台南硓𥑮石．芳宅",
+    "zh-Hans": "台南硓𥑮石．芳宅",
+    en: "Tainan Coral-Stone Fang House",
+    ja: "台南珊瑚礁石・芳邸",
+    ko: "타이난 산호석・팡 주택",
+  },
+};
