@@ -157,7 +157,7 @@ const TAIPEI_GALLERY = Array.from(
 // (reusing existing thumbnails) until real per-case photos are supplied.
 const RESTORE_CASES = [
   {
-    label: "信義街咾咕石‧芳宅",
+    label: "台南硓𥑮石．芳宅",
     href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=622507",
     image: "case-restore-xinyi.jpg",
   },

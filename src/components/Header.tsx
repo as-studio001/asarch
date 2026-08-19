@@ -17,7 +17,7 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const MATERIAL_LINKS = [
   { label: "原型首頁", href: "https://www.as-structure.com/" },
   {
-    label: "信義街咾咕石‧芳宅",
+    label: "台南硓𥑮石．芳宅",
     href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=622507",
   },
   {
