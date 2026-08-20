@@ -738,14 +738,24 @@ export default function Home() {
             // untouched below), so that sliding interactivity is unaffected.
             hoverEnabled={false}
             backgroundColor="transparent"
-            // Mobile/tablet renders this same effect into a physically
-            // smaller box (h-3/4 w-3/4 of a narrower viewport). particleCount
-            // alone saturates past ~75 (see minGap's comment in
-            // svgparticles.tsx), so minGap is what actually raises the
-            // density here — plus a stronger contrast filter — so the
-            // "原型 X 建築" text stays legible at that smaller size.
-            particleCount={isMobile ? 320 : 180}
-            minGap={isMobile ? 1 : 2}
+            // gapPerWidth scales the sampling gap with the canvas's own
+            // CSS width (h-3/4 w-3/4 of the viewport), so particle density
+            // relative to the rendered "原型 X 建築" text stays constant
+            // regardless of screen size, instead of a fixed absolute gap
+            // making wider screens read progressively denser/finer and
+            // narrower ones progressively sparser (see gapPerWidth's
+            // comment in svgparticles.tsx). 600 is calibrated so a ~1600px
+            // viewport (this effect's box ≈ 1200px wide) lands on the same
+            // gap the old fixed-gap desktop default used. minGap=1 just
+            // floors it so extremely narrow screens never hit gap 0.
+            particleCount={180}
+            minGap={1}
+            gapPerWidth={600}
+            // Particles are drawn at the source image pixel's own alpha
+            // (soft/anti-aliased edges read as partially transparent),
+            // which left the white particles looking dim rather than
+            // bright white — boosted across both mobile and desktop.
+            alphaBoost={1.6}
             dropShadowFilter={
               isMobile
                 ? "drop-shadow(0 0 1.5px rgba(0,0,0,0.95)) drop-shadow(0 0 3px rgba(0,0,0,0.85)) drop-shadow(0 0 6px rgba(0,0,0,0.5))"

@@ -177,6 +177,25 @@ function __OriginkitBase_ParticleImage(__props) {
         // unless minGap is also lowered. Default 2 matches the original,
         // unchanged behavior; pass 1 for a denser field on a smaller canvas.
         minGap = 2,
+        // When set, overrides the particleCount-based gap formula below
+        // with one that scales the sampling gap proportionally to the
+        // canvas's own CSS width (gap = round(W / gapPerWidth)) — so the
+        // number of sample-columns crossing the canvas (and therefore the
+        // density relative to the rendered content, not to absolute CSS
+        // px) stays constant across any container size. Without this, gap
+        // is a fixed absolute px value regardless of W: a wider container
+        // then fits proportionally MORE sample columns across the same
+        // (proportionally bigger) content, so relative density silently
+        // increases with container width — this prop fixes it to whatever
+        // density gapPerWidth was calibrated against.
+        gapPerWidth,
+        // Multiplies each particle's drawn alpha (clamped to opaque) —
+        // particles are drawn at whatever alpha the source image pixel
+        // itself had (soft/anti-aliased edges read as partially
+        // transparent), which can leave "white" particles looking dim
+        // rather than bright white. 1 = unchanged (uses the sampled alpha
+        // as-is); higher values push faint particles toward fully opaque.
+        alphaBoost = 1,
         ...props
     } = { ...COMPONENT_DEFAULTS, ...__props }
     const hover = hoverEnabled
@@ -236,6 +255,7 @@ function __OriginkitBase_ParticleImage(__props) {
         particleColor,
         singleColor,
         multiColors,
+        alphaBoost,
     }
     const sceneRef = useRef({ particles: [] })
     const dimsRef = useRef({ W: 0, H: 0 })
@@ -251,6 +271,7 @@ function __OriginkitBase_ParticleImage(__props) {
         scale,
         particleCount,
         minGap,
+        gapPerWidth,
         hover,
         hoverType,
         roamWidth,
@@ -336,6 +357,7 @@ function __OriginkitBase_ParticleImage(__props) {
             scale: sc,
             particleCount: count,
             minGap: minGp,
+            gapPerWidth: gpw,
             hover: hOn,
             hoverType: ht,
             roamWidth: rw,
@@ -348,7 +370,9 @@ function __OriginkitBase_ParticleImage(__props) {
         const canvas = canvasRef.current
         if (!canvas) return
         clearTimeout(animTimerRef.current)
-        const gap = Math.max(minGp, Math.round(150 / Math.max(1, count)))
+        const gap = gpw
+            ? Math.max(minGp, Math.round(W / gpw))
+            : Math.max(minGp, Math.round(150 / Math.max(1, count)))
         const dpr = window.devicePixelRatio || 1
         canvas.width = Math.round(W * dpr)
         canvas.height = Math.round(H * dpr)
@@ -527,6 +551,7 @@ function __OriginkitBase_ParticleImage(__props) {
                 particleColor: pColor,
                 singleColor: scColor,
                 multiColors: mcColors,
+                alphaBoost: aBoost,
             } = physicsRef.current as any
             const state = animStateRef.current
             const { x: rawMx, y: rawMy, active } = mouseRef.current
@@ -771,6 +796,7 @@ function __OriginkitBase_ParticleImage(__props) {
                     }
                 }
 
+                if (aBoost && aBoost !== 1) da = Math.min(255, Math.round(da * aBoost))
                 drawParticle(p.x * dpr, p.y * dpr, dr, dg, db, da, isCircle)
             }
             ctx.putImageData(idata, 0, 0)
