@@ -25,6 +25,9 @@ export interface ChapterContent {
   title: Lang5;
   description: Lang5;
   cases?: SiteCase[];
+  heroPhoto?: string;
+  mainPhoto?: string;
+  thumbnails?: string[];
 }
 
 export interface DeclarationContent {

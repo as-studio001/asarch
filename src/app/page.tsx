@@ -279,6 +279,30 @@ export default function Home() {
     siteContent.declaration?.headline?.[i]?.[lang] ?? manifestoHeadlineLines[lang][i];
   const declarationParagraph = (i: 0 | 1 | 2 | 3) =>
     siteContent.declaration?.paragraphs?.[i]?.[lang] ?? manifestoParagraphs[lang][i];
+  // 章節的三組照片（頂部大圖／輪播縮圖／右側大照片）也可以在後台換圖；
+  // 後台傳來的是完整 https:// 網址，本地預設圖是這個 repo 自己
+  // public/photos/ 底下的檔名，兩種都要能用同一個 <Image src> 接受
+  const chapterImg = (override: string | undefined, localFilename: string) =>
+    override || `${basePath}/photos/${localFilename}`;
+  const restoreHeroSrc = chapterImg(siteContent.restore?.heroPhoto, "chapter01.jpg");
+  const restoreMainSrc = chapterImg(siteContent.restore?.mainPhoto, "restore-main.jpg");
+  const restoreThumbSrcs = siteContent.restore?.thumbnails?.length
+    ? siteContent.restore.thumbnails
+    : RESTORE_THUMBS.map((f) => `${basePath}/photos/${f}`);
+  const detailHeroSrc = chapterImg(siteContent.detail?.heroPhoto, "chapter02.jpg");
+  const detailMainSrc = chapterImg(siteContent.detail?.mainPhoto, "detail-main.jpg");
+  const detailThumbSrcs = siteContent.detail?.thumbnails?.length
+    ? siteContent.detail.thumbnails
+    : DETAIL_THUMBS.map((f) => `${basePath}/photos/${f}`);
+  const exhibitHeroSrc = chapterImg(siteContent.exhibit?.heroPhoto, "chapter03.jpg");
+  const exhibitMainSrc = chapterImg(siteContent.exhibit?.mainPhoto, "exhibit-main.jpg");
+  const exhibitThumbSrcs = siteContent.exhibit?.thumbnails?.length
+    ? siteContent.exhibit.thumbnails
+    : EXHIBIT_THUMBS.map((f) => `${basePath}/photos/${f}`);
+  const digitalMainSrc = chapterImg(siteContent.digital?.mainPhoto, "digital-main.jpg");
+  const digitalThumbSrcs = siteContent.digital?.thumbnails?.length
+    ? siteContent.digital.thumbnails
+    : DIGITAL_THUMBS.map((f) => `${basePath}/photos/${f}`);
   const restoreDesc = siteContent.restore?.description?.[lang] ?? restoreDescription[lang];
   const detailDesc = siteContent.detail?.description?.[lang] ?? detailDescription[lang];
   const exhibitDesc = siteContent.exhibit?.description?.[lang] ?? exhibitDescription[lang];
@@ -827,7 +851,7 @@ export default function Home() {
         }}
       >
         <Image
-          src={`${basePath}/photos/chapter01.jpg`}
+          src={restoreHeroSrc}
           alt="原型修復"
           fill
           className="object-cover"
@@ -872,10 +896,10 @@ export default function Home() {
     <section className="flex w-full flex-col items-start gap-10 bg-black px-[6%] pt-[9vh] lg:flex-row lg:gap-[8%]">
       <div className="flex w-full flex-col lg:w-[26%]">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
-          {RESTORE_THUMBS.map((src, i) => (
+          {restoreThumbSrcs.map((src, i) => (
             <Image
               key={src}
-              src={`${basePath}/photos/${src}`}
+              src={src}
               alt={`原型修復 縮圖 ${i + 1}`}
               fill
               className="object-cover transition-opacity duration-700"
@@ -930,7 +954,7 @@ export default function Home() {
       <div className="flex w-full flex-col items-start lg:w-[58.08vw]">
         <div className="relative w-full" style={{ aspectRatio: "2600 / 1231" }}>
           <Image
-            src={`${basePath}/photos/restore-main.jpg`}
+            src={restoreMainSrc}
             alt="原型修復"
             fill
             className="object-cover"
@@ -986,7 +1010,7 @@ export default function Home() {
         }}
       >
         <Image
-          src={`${basePath}/photos/chapter02.jpg`}
+          src={detailHeroSrc}
           alt="原型細部"
           fill
           className="object-cover"
@@ -1023,10 +1047,10 @@ export default function Home() {
     <section className="flex w-full flex-col items-start gap-10 bg-black px-[6%] pt-[9vh] lg:flex-row lg:gap-[8%]">
       <div className="flex w-full flex-col lg:w-[26%]">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
-          {DETAIL_THUMBS.map((src, i) => (
+          {detailThumbSrcs.map((src, i) => (
             <Image
               key={src}
-              src={`${basePath}/photos/${src}`}
+              src={src}
               alt={`原型細部 縮圖 ${i + 1}`}
               fill
               className="object-cover transition-opacity duration-700"
@@ -1076,7 +1100,7 @@ export default function Home() {
       <div className="flex w-full flex-col items-start lg:w-[58.08vw]">
         <div className="relative w-full" style={{ aspectRatio: "2600 / 1235" }}>
           <Image
-            src={`${basePath}/photos/detail-main.jpg`}
+            src={detailMainSrc}
             alt="原型細部"
             fill
             className="object-cover"
@@ -1125,7 +1149,7 @@ export default function Home() {
         }}
       >
         <Image
-          src={`${basePath}/photos/chapter03.jpg`}
+          src={exhibitHeroSrc}
           alt="原型展覽"
           fill
           className="object-cover"
@@ -1159,10 +1183,10 @@ export default function Home() {
     <section className="flex w-full flex-col items-start gap-10 bg-black px-[6%] pt-[9vh] lg:flex-row lg:gap-[8%]">
       <div className="flex w-full flex-col lg:w-[26%]">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
-          {EXHIBIT_THUMBS.map((src, i) => (
+          {exhibitThumbSrcs.map((src, i) => (
             <Image
               key={src}
-              src={`${basePath}/photos/${src}`}
+              src={src}
               alt={`原型展覽 縮圖 ${i + 1}`}
               fill
               className="object-cover transition-opacity duration-700"
@@ -1212,7 +1236,7 @@ export default function Home() {
       <div className="flex w-full flex-col items-start lg:w-[58.08vw]">
         <div className="relative w-full" style={{ aspectRatio: "2600 / 1231" }}>
           <Image
-            src={`${basePath}/photos/exhibit-main.jpg`}
+            src={exhibitMainSrc}
             alt="原型展覽"
             fill
             className="object-cover"
@@ -1300,10 +1324,10 @@ export default function Home() {
     <section className="flex w-full flex-col items-start gap-10 bg-black px-[6%] pt-[9vh] lg:flex-row lg:gap-[8%]">
       <div className="flex w-full flex-col lg:w-[26%]">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
-          {DIGITAL_THUMBS.map((src, i) => (
+          {digitalThumbSrcs.map((src, i) => (
             <Image
               key={src}
-              src={`${basePath}/photos/${src}`}
+              src={src}
               alt={`原型數位 縮圖 ${i + 1}`}
               fill
               className="object-cover transition-opacity duration-700"
@@ -1351,7 +1375,7 @@ export default function Home() {
       <div className="flex w-full flex-col items-start lg:w-[58.08vw]">
         <div className="relative w-full" style={{ aspectRatio: "2600 / 1231" }}>
           <Image
-            src={`${basePath}/photos/digital-main.jpg`}
+            src={digitalMainSrc}
             alt="原型數位"
             fill
             className="object-cover"
