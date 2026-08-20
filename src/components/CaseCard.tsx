@@ -23,11 +23,15 @@ export default function CaseCard({
   widthClass?: string;
 }) {
   const className = `group flex ${widthClass} flex-col items-center`;
+  // CMS-managed cases (from Internal-Pages) supply a full https:// image
+  // URL directly; the older hardcoded cases still pass a bare filename
+  // living in this repo's own public/photos/.
+  const src = /^https?:\/\//.test(image) ? image : `${basePath}/photos/${image}`;
   const inner = (
     <>
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3" }}>
         <Image
-          src={`${basePath}/photos/${image}`}
+          src={src}
           alt={label}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
