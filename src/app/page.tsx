@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import GalleryOverlay from "@/components/GalleryOverlay";
 import CaseCard from "@/components/CaseCard";
 import { useLanguage } from "@/lib/i18n";
+import { useSiteContent } from "@/lib/useSiteContent";
 import {
   manifestoHeadlineLines,
   manifestoMotto,
@@ -270,6 +271,47 @@ const CHAPTER01_PARALLAX_FACTOR = 0.08;
 
 export default function Home() {
   const { lang } = useLanguage();
+  // 主網站宣言／章節文字／案例卡片可以在 Internal-Pages 的後台編輯，
+  // 這裡在瀏覽器端抓取最新內容；抓不到（離線、還沒設定過）就 fallback
+  // 回原本寫死在 translations.ts/page.tsx 裡的文字，畫面永遠不會空白。
+  const siteContent = useSiteContent();
+  const declarationHeadline = (i: 0 | 1) =>
+    siteContent.declaration?.headline?.[i]?.[lang] ?? manifestoHeadlineLines[lang][i];
+  const declarationParagraph = (i: 0 | 1 | 2 | 3) =>
+    siteContent.declaration?.paragraphs?.[i]?.[lang] ?? manifestoParagraphs[lang][i];
+  const restoreDesc = siteContent.restore?.description?.[lang] ?? restoreDescription[lang];
+  const detailDesc = siteContent.detail?.description?.[lang] ?? detailDescription[lang];
+  const exhibitDesc = siteContent.exhibit?.description?.[lang] ?? exhibitDescription[lang];
+  const digitalDesc =
+    siteContent.digital?.description?.[lang] ??
+    "原型數位不是單純用數位工具，而是重新思考建築如何進入數位時代。從 BIM、參數化設計、AI、數位製造到資訊整合，我們將技術轉化為設計思考與工作方法。數位不是取代人的創意，而是讓想法更快被驗證、更精準地被實現。從設計圖面到資料庫、從模型到現場，我們全面使用Archicad、Rhino 試圖讓圖說與設計無縫接軌、甚至讓結構也同時一併完成。";
+  const restoreCaseItems =
+    siteContent.restore?.cases && siteContent.restore.cases.length
+      ? siteContent.restore.cases.map((c) => ({
+          key: c.href,
+          image: c.image,
+          href: c.href,
+          label: c.label[lang] ?? c.label["zh-Hant"],
+        }))
+      : RESTORE_CASES.map((c) => ({ key: c.key, image: c.image, href: c.href, label: caseLabels[c.key][lang] }));
+  const detailCaseItems =
+    siteContent.detail?.cases && siteContent.detail.cases.length
+      ? siteContent.detail.cases.map((c) => ({
+          key: c.href,
+          image: c.image,
+          href: c.href,
+          label: c.label[lang] ?? c.label["zh-Hant"],
+        }))
+      : DETAIL_CASES.map((c) => ({ key: c.key, image: c.image, href: c.href, label: caseLabels[c.key][lang] }));
+  const digitalCaseItems =
+    siteContent.digital?.cases && siteContent.digital.cases.length
+      ? siteContent.digital.cases.map((c) => ({
+          key: c.href,
+          image: c.image,
+          href: c.href,
+          label: c.label[lang] ?? c.label["zh-Hant"],
+        }))
+      : DIGITAL_CASES.map((c) => ({ key: c.key, image: c.image, href: c.href, label: caseLabels[c.key][lang] }));
   const wrapperRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const particleWrapRef = useRef<HTMLDivElement>(null);
@@ -731,9 +773,9 @@ export default function Home() {
             letterSpacing: "0.02em",
           }}
         >
-          {manifestoHeadlineLines[lang][0]}
+          {declarationHeadline(0)}
           <br />
-          {manifestoHeadlineLines[lang][1]}
+          {declarationHeadline(1)}
         </h2>
         <p
           className="mt-4 text-base text-white sm:text-lg"
@@ -755,13 +797,13 @@ export default function Home() {
             opacity: 0.75,
           }}
         >
-          <p>{manifestoParagraphs[lang][0]}</p>
-          <p className="mt-4">{manifestoParagraphs[lang][1]}</p>
+          <p>{declarationParagraph(0)}</p>
+          <p className="mt-4">{declarationParagraph(1)}</p>
           <p className="mt-4">
-            {manifestoParagraphs[lang][2]}
+            {declarationParagraph(2)}
             <span className="ml-6">{manifestoMotto}</span>
           </p>
-          <p className="mt-4">{manifestoParagraphs[lang][3]}</p>
+          <p className="mt-4">{declarationParagraph(3)}</p>
         </div>
       </div>
     </section>
@@ -863,7 +905,7 @@ export default function Home() {
           {restoreSliderLabel[lang]}｜Restoration
         </h3>
         <p className="mt-4 text-[0.9rem] leading-relaxed text-white/70">
-          {restoreDescription[lang]}
+          {restoreDesc}
         </p>
         <div className="mt-8 flex items-center gap-6 text-white/60">
           <button
@@ -920,10 +962,10 @@ export default function Home() {
         CASES
       </span>
       <div className="flex w-full flex-wrap items-start justify-center gap-x-[4%] gap-y-10">
-        {RESTORE_CASES.map((c) => (
+        {restoreCaseItems.map((c) => (
           <CaseCard
             key={c.key}
-            label={caseLabels[c.key][lang]}
+            label={c.label}
             image={c.image}
             href={c.href}
             widthClass="w-[42%] lg:w-[26%]"
@@ -1013,7 +1055,7 @@ export default function Home() {
           {detailSliderLabel[lang]}｜Detail
         </h3>
         <p className="mt-4 text-[0.9rem] leading-relaxed text-white/70">
-          {detailDescription[lang]}
+          {detailDesc}
         </p>
         <div className="mt-8 flex items-center gap-6 text-white/60">
           <button
@@ -1060,10 +1102,10 @@ export default function Home() {
         CASES
       </span>
       <div className="flex w-full flex-wrap items-start justify-center gap-x-[4%] gap-y-10">
-        {DETAIL_CASES.map((c) => (
+        {detailCaseItems.map((c) => (
           <CaseCard
             key={c.key}
-            label={caseLabels[c.key][lang]}
+            label={c.label}
             image={c.image}
             href={c.href}
             widthClass="w-[42%] lg:w-[26%]"
@@ -1149,7 +1191,7 @@ export default function Home() {
           {exhibitSliderLabel[lang]}｜Exhibition
         </h3>
         <p className="mt-4 text-[0.9rem] leading-relaxed text-white/70">
-          {exhibitDescription[lang]}
+          {exhibitDesc}
         </p>
         <div className="mt-8 flex items-center gap-6 text-white/60">
           <button
@@ -1290,7 +1332,7 @@ export default function Home() {
           原型數位｜Digital
         </h3>
         <p className="mt-4 text-[0.9rem] leading-relaxed text-white/70">
-          原型數位不是單純用數位工具，而是重新思考建築如何進入數位時代。從 BIM、參數化設計、AI、數位製造到資訊整合，我們將技術轉化為設計思考與工作方法。數位不是取代人的創意，而是讓想法更快被驗證、更精準地被實現。從設計圖面到資料庫、從模型到現場，我們全面使用Archicad、Rhino 試圖讓圖說與設計無縫接軌、甚至讓結構也同時一併完成。
+          {digitalDesc}
         </p>
         <div className="mt-8 flex items-center gap-6 text-white/60">
           <button
@@ -1334,10 +1376,10 @@ export default function Home() {
         CASES
       </span>
       <div className="flex w-full flex-wrap items-start justify-center gap-x-[4%] gap-y-10">
-        {DIGITAL_CASES.map((c) => (
+        {digitalCaseItems.map((c) => (
           <CaseCard
             key={c.key}
-            label={caseLabels[c.key][lang]}
+            label={c.label}
             image={c.image}
             href={c.href}
             widthClass="w-[42%] lg:w-[16%]"
