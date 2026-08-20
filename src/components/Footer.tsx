@@ -1,9 +1,11 @@
 // Mirrors the footer from the original AS studio homepage
 // (原型教學轉code/design_handoff_architecture_site/建築事務所首頁.dc.html),
-// desktop layout only (no mobile collapsed-into-a-button variant), and
 // fixed to the "dark mode" colors the same way Header.tsx is — no
 // dark/light toggle on this site. Contact details are proper
 // nouns/numbers, so they're left untranslated like the CHAPTER label.
+// Below sm: the three blocks stack (a justify-between row would squeeze
+// the Chinese address/phone lines too narrow to wrap cleanly). At sm+:
+// the original single-row layout.
 const SOCIAL_LINKS = [
   {
     label: "Facebook",
@@ -26,12 +28,10 @@ const SOCIAL_LINKS = [
 export default function Footer() {
   return (
     <footer
-      style={{
-        backgroundColor: "oklch(0.12 0 0)",
-        padding: "80px 40px",
-      }}
+      className="px-6 py-16 sm:px-10 sm:py-20"
+      style={{ backgroundColor: "oklch(0.12 0 0)" }}
     >
-      <div className="mx-auto flex max-w-[1200px] items-start justify-between">
+      <div className="mx-auto flex max-w-[1200px] flex-col items-start gap-8 sm:flex-row sm:items-start sm:justify-between sm:gap-0">
         <div className="text-left">
           <p className="mb-2 text-sm" style={{ color: "oklch(0.7 0 0)" }}>
             電話：06-2905293

@@ -20,7 +20,7 @@ export default function GalleryOverlay({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center p-10"
+      className="fixed inset-0 z-[2000] flex items-center justify-center p-4 sm:p-10"
       style={{ backgroundColor: "rgba(0,0,0,0.65)" }}
       onClick={onClose}
     >
@@ -28,13 +28,15 @@ export default function GalleryOverlay({
           purpose: putting max-height + overflow-y directly on a
           column-count element makes the browser add MORE columns
           sideways to fit overflow instead of scrolling vertically within
-          the fixed 3. This outer box scrolls; the inner one just grows as
-          tall as its 3 columns need. */}
+          the fixed column count. This outer box scrolls; the inner one
+          just grows as tall as its columns need. Fewer columns below sm
+          (2 instead of 3) so each photo isn't squeezed too narrow on a
+          phone-width screen. */}
       <div
         className="no-scrollbar max-h-[90vh] w-full max-w-5xl overflow-y-auto overflow-x-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ columnCount: 3, columnGap: "5px" }}>
+        <div className="columns-2 gap-[5px] sm:columns-3">
           {images.map((src, i) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img

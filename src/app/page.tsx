@@ -286,6 +286,18 @@ export default function Home() {
   const [exhibitThumbIndex, setExhibitThumbIndex] = useState(0);
   const [digitalThumbIndex, setDigitalThumbIndex] = useState(0);
   const [openGallery, setOpenGallery] = useState<string[] | null>(null);
+  // Drives the hero particle effect's density/contrast boost below (see
+  // the ParticleImage usage) — same lg (1024px) cutover used everywhere
+  // else on the page for the mobile/tablet-safe layout. Starts false
+  // (matches desktop) so SSR/first paint don't flash the boosted values.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1023px)");
+    const update = () => setIsMobile(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
   // 0 = just landed (only roof/beam + wall-above-boundary visible, rest
   // hidden under the fade), 1 = fully scrolled through (photo fully lit —
   // plants/furniture/glass wall/floor revealed).
@@ -660,7 +672,19 @@ export default function Home() {
             // untouched below), so that sliding interactivity is unaffected.
             hoverEnabled={false}
             backgroundColor="transparent"
-            particleCount={180}
+            // Mobile/tablet renders this same effect into a physically
+            // smaller box (h-3/4 w-3/4 of a narrower viewport). particleCount
+            // alone saturates past ~75 (see minGap's comment in
+            // svgparticles.tsx), so minGap is what actually raises the
+            // density here — plus a stronger contrast filter — so the
+            // "原型 X 建築" text stays legible at that smaller size.
+            particleCount={isMobile ? 320 : 180}
+            minGap={isMobile ? 1 : 2}
+            dropShadowFilter={
+              isMobile
+                ? "drop-shadow(0 0 1.5px rgba(0,0,0,0.95)) drop-shadow(0 0 3px rgba(0,0,0,0.85)) drop-shadow(0 0 6px rgba(0,0,0,0.5))"
+                : undefined
+            }
             imageConfig={{
               image: `${basePath}/originkit/banner.png`,
               mode: "fit",
@@ -740,15 +764,22 @@ export default function Home() {
         edge. */}
     <section
       ref={chapter01Ref}
-      className="relative flex h-screen w-full items-center overflow-hidden bg-black"
+      className="relative flex w-full items-start overflow-hidden bg-black lg:h-screen lg:items-center"
     >
       <div
-        className="relative"
+        // Below lg (1024px): fills the section edge-to-edge (h-full/w-full
+        // make aspect-ratio a no-op — both dimensions are already
+        // definite), so the photo covers the phone/tablet screen like a
+        // normal full-bleed hero. At lg+: the original desktop sizing.
+        // Below lg: width-driven — w-full + the aspect-ratio below (never
+        // overridden by an explicit height here) scales the photo to the
+        // screen's width with no cropping and no stretch. At lg+: the
+        // original desktop sizing.
+        className="relative w-full lg:w-[calc(83.20vh+40vw)]"
         style={{
           // Same photo, sized so its black top/bottom margin is exactly
           // half of the old 80vw-wide version: newWidth = 50vh*(imgW/imgH)
           // + 40vw (derived from halving "50vh - 24.04vw", the old margin).
-          width: "calc(83.20vh + 40vw)",
           aspectRatio: "3200 / 1923",
           transform: `translateY(${chapter01Offset}px)`,
         }}
@@ -761,7 +792,10 @@ export default function Home() {
         />
       </div>
       <div
-        className="absolute top-1/2 right-[22%] flex translate-x-[6cm] -translate-y-1/2 flex-col items-start text-left sm:right-[25%]"
+        // Below lg: a safe bottom-left overlay with no fixed-cm math, so
+        // it can never get pushed off a narrow screen. At lg+: the
+        // original desktop position (right-anchored + 6cm nudge).
+        className="absolute inset-x-6 bottom-10 z-10 flex flex-col items-start text-left lg:inset-x-auto lg:top-1/2 lg:right-[25%] lg:bottom-auto lg:translate-x-[6cm] lg:-translate-y-1/2"
       >
         <span
           className="text-xs text-white/60 sm:text-sm"
@@ -793,8 +827,8 @@ export default function Home() {
         made the visual gap to CASES ~12.5cm instead of the intended 1cm
         (CASES's own top padding supplies that 1cm now that this section
         no longer pads out the rest of the screen). */}
-    <section className="flex w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
-      <div className="flex w-[26%] flex-col">
+    <section className="flex w-full flex-col items-start gap-10 bg-black px-[6%] pt-[9vh] lg:flex-row lg:gap-[8%]">
+      <div className="flex w-full flex-col lg:w-[26%]">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
           {RESTORE_THUMBS.map((src, i) => (
             <Image
@@ -851,7 +885,7 @@ export default function Home() {
           thumbnail's left edge sits from the screen's left edge (6vw):
           section padding 6vw + left col 26%*88vw + gap 8%*88vw = 35.92vw
           left edge, so width = (100 - 6) - 35.92 = 58.08vw. */}
-      <div className="flex flex-col items-start" style={{ width: "58.08vw" }}>
+      <div className="flex w-full flex-col items-start lg:w-[58.08vw]">
         <div className="relative w-full" style={{ aspectRatio: "2600 / 1231" }}>
           <Image
             src={`${basePath}/photos/restore-main.jpg`}
@@ -875,14 +909,14 @@ export default function Home() {
       <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
         CASES
       </span>
-      <div className="flex w-full items-start justify-center gap-[4%]">
+      <div className="flex w-full flex-wrap items-start justify-center gap-x-[4%] gap-y-10">
         {RESTORE_CASES.map((c) => (
           <CaseCard
             key={c.key}
             label={caseLabels[c.key][lang]}
             image={c.image}
             href={c.href}
-            widthClass="w-[26%]"
+            widthClass="w-[42%] lg:w-[26%]"
           />
         ))}
       </div>
@@ -892,16 +926,19 @@ export default function Home() {
         chapter number, and title. */}
     <section
       ref={chapter02Ref}
-      className="relative flex h-screen w-full items-center overflow-hidden bg-black"
+      className="relative flex w-full items-start overflow-hidden bg-black lg:h-screen lg:items-center"
     >
       <div
-        className="relative"
+        // Below lg: width-driven — w-full + the aspect-ratio below (never
+        // overridden by an explicit height here) scales the photo to the
+        // screen's width with no cropping and no stretch. At lg+: the
+        // original desktop sizing.
+        className="relative w-full lg:w-[calc(83.20vh+40vw)]"
         style={{
           // Matched to Chapter 01's exact width (rather than its own
           // halved-margin width) since this photo read as too wide/full
           // otherwise — same formula as Chapter 01, aspect ratio here just
           // makes it render shorter instead.
-          width: "calc(83.20vh + 40vw)",
           aspectRatio: "2263 / 1273",
           transform: `translateY(${chapter02Offset}px)`,
         }}
@@ -914,8 +951,11 @@ export default function Home() {
         />
       </div>
       <div
-        className="absolute top-1/2 right-[22%] flex flex-col items-start text-left sm:right-[25%]"
-        style={{ transform: "translate(6cm, -50%) translateY(10px)" }}
+        // Below lg: same safe bottom-left overlay as the other chapters.
+        // At lg+: the original position — translate-y combines the old
+        // "-50% translateY(10px)" two-step inline transform into one
+        // calc() so it can live in a plain (breakpoint-gated) utility class.
+        className="absolute inset-x-6 bottom-10 z-10 flex flex-col items-start text-left lg:inset-x-auto lg:top-1/2 lg:right-[25%] lg:bottom-auto lg:translate-x-[6cm] lg:translate-y-[calc(-50%+10px)]"
       >
         <span
           className="text-xs text-white/60 sm:text-sm"
@@ -938,8 +978,8 @@ export default function Home() {
     {/* Section 5 — same featured-work slider template as section 4.
         Deliberately NOT h-screen (matching Section 4/7's demo) — sized to
         its own content so Section 5.5/CASES sits a clean 1cm below it. */}
-    <section className="flex w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
-      <div className="flex w-[26%] flex-col">
+    <section className="flex w-full flex-col items-start gap-10 bg-black px-[6%] pt-[9vh] lg:flex-row lg:gap-[8%]">
+      <div className="flex w-full flex-col lg:w-[26%]">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
           {DETAIL_THUMBS.map((src, i) => (
             <Image
@@ -991,7 +1031,7 @@ export default function Home() {
 
       {/* Fixed photo, native ratio (2600x1235), same 58.08vw width formula
           as section 4 (layout proportions are identical). */}
-      <div className="flex flex-col items-start" style={{ width: "58.08vw" }}>
+      <div className="flex w-full flex-col items-start lg:w-[58.08vw]">
         <div className="relative w-full" style={{ aspectRatio: "2600 / 1235" }}>
           <Image
             src={`${basePath}/photos/detail-main.jpg`}
@@ -1009,14 +1049,14 @@ export default function Home() {
       <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
         CASES
       </span>
-      <div className="flex w-full items-start justify-center gap-[4%]">
+      <div className="flex w-full flex-wrap items-start justify-center gap-x-[4%] gap-y-10">
         {DETAIL_CASES.map((c) => (
           <CaseCard
             key={c.key}
             label={caseLabels[c.key][lang]}
             image={c.image}
             href={c.href}
-            widthClass="w-[26%]"
+            widthClass="w-[42%] lg:w-[26%]"
           />
         ))}
       </div>
@@ -1026,15 +1066,18 @@ export default function Home() {
         chapter number, and title. */}
     <section
       ref={chapter03Ref}
-      className="relative flex h-screen w-full items-center overflow-hidden bg-black"
+      className="relative flex w-full items-start overflow-hidden bg-black lg:h-screen lg:items-center"
     >
       <div
-        className="relative"
+        // Below lg: width-driven — w-full + the aspect-ratio below (never
+        // overridden by an explicit height here) scales the photo to the
+        // screen's width with no cropping and no stretch. At lg+: the
+        // original desktop sizing.
+        className="relative w-full lg:w-[calc(83.20vh+40vw)]"
         style={{
           // Same Chapter 01/02 width formula; aspect ratio here (4608x3072,
           // a native 3:2 photo rather than a pre-cropped wide banner) just
           // makes it render taller instead.
-          width: "calc(83.20vh + 40vw)",
           aspectRatio: "4608 / 3072",
           transform: `translateY(${chapter03Offset}px)`,
         }}
@@ -1047,7 +1090,7 @@ export default function Home() {
         />
       </div>
       <div
-        className="absolute top-1/2 right-[22%] flex translate-x-[6cm] -translate-y-1/2 flex-col items-start text-left sm:right-[25%]"
+        className="absolute inset-x-6 bottom-10 z-10 flex flex-col items-start text-left lg:inset-x-auto lg:top-1/2 lg:right-[25%] lg:bottom-auto lg:translate-x-[6cm] lg:-translate-y-1/2"
       >
         <span
           className="text-xs text-white/60 sm:text-sm"
@@ -1071,8 +1114,8 @@ export default function Home() {
         Deliberately NOT h-screen (matching Section 4's demo) — sized to
         its own content so the following CASES band sits a clean 1cm
         below it instead of leaving forced full-viewport dead space. */}
-    <section className="flex w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
-      <div className="flex w-[26%] flex-col">
+    <section className="flex w-full flex-col items-start gap-10 bg-black px-[6%] pt-[9vh] lg:flex-row lg:gap-[8%]">
+      <div className="flex w-full flex-col lg:w-[26%]">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
           {EXHIBIT_THUMBS.map((src, i) => (
             <Image
@@ -1124,7 +1167,7 @@ export default function Home() {
 
       {/* Fixed photo — IMG_2779, cropped to the same 2600x1231 size as the
           原型修復/原型細部 main photos above, same 58.08vw width formula. */}
-      <div className="flex flex-col items-start" style={{ width: "58.08vw" }}>
+      <div className="flex w-full flex-col items-start lg:w-[58.08vw]">
         <div className="relative w-full" style={{ aspectRatio: "2600 / 1231" }}>
           <Image
             src={`${basePath}/photos/exhibit-main.jpg`}
@@ -1146,7 +1189,7 @@ export default function Home() {
       <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
         CASES
       </span>
-      <div className="flex w-full items-start justify-center gap-[2%]">
+      <div className="flex w-full flex-wrap items-start justify-center gap-x-[2%] gap-y-10">
         {EXHIBIT_CASES.map((c) => (
           <CaseCard
             key={c.key}
@@ -1154,7 +1197,7 @@ export default function Home() {
             image={c.image}
             href={c.href}
             onClick={c.gallery ? () => setOpenGallery(c.gallery) : undefined}
-            widthClass="w-[20%]"
+            widthClass="w-[42%] lg:w-[20%]"
           />
         ))}
       </div>
@@ -1170,28 +1213,27 @@ export default function Home() {
         may need adjusting for the real photo's actual ratio. */}
     <section
       ref={chapter04Ref}
-      className="relative flex h-screen w-full items-center overflow-hidden bg-black"
+      className="relative flex w-full items-start overflow-hidden bg-black lg:h-screen lg:items-center"
     >
       <div
-        className="relative flex items-center justify-center"
+        className="relative flex h-full w-full items-center justify-center lg:h-auto lg:w-[calc(83.20vh+40vw)]"
         style={{
-          width: "calc(83.20vh + 40vw)",
           aspectRatio: "3200 / 1923",
           transform: `translateY(${chapter04Offset}px)`,
         }}
       >
         {/* Ported from the main site's mobile-dark-mode rotating globe
             widget (see RotatingGlobe.tsx) — drag to rotate only, no
-            zoom/search/click, per explicit request. Square component
-            capped to the banner's own height so it fits centered inside
-            this wider-than-tall box. */}
-        <RotatingGlobe
-          className="h-full"
-          style={{ aspectRatio: "1 / 1", transform: "translateX(-2cm)" }}
-        />
+            zoom/search/click, per explicit request. Below lg: sized off
+            its own width (safely bounded by the phone/tablet screen) so a
+            tall narrow viewport can't blow it up past the screen edges.
+            At lg+: the original height-driven sizing, capped to the
+            banner's own height so it fits centered inside this
+            wider-than-tall box. */}
+        <RotatingGlobe className="aspect-square w-full lg:h-full lg:w-auto lg:translate-x-[-2cm]" />
       </div>
       <div
-        className="absolute top-1/2 right-[22%] flex translate-x-[6cm] -translate-y-1/2 flex-col items-start text-left sm:right-[25%]"
+        className="absolute inset-x-6 bottom-10 z-10 flex flex-col items-start text-left lg:inset-x-auto lg:top-1/2 lg:right-[25%] lg:bottom-auto lg:translate-x-[6cm] lg:-translate-y-1/2"
       >
         <span
           className="text-xs text-white/60 sm:text-sm"
@@ -1213,8 +1255,8 @@ export default function Home() {
 
     {/* Section 9 — same featured-work slider template as the other
         chapters. Deliberately NOT h-screen, same reasoning as Section 4/5/7. */}
-    <section className="flex w-full items-start gap-[8%] bg-black px-[6%] pt-[9vh]">
-      <div className="flex w-[26%] flex-col">
+    <section className="flex w-full flex-col items-start gap-10 bg-black px-[6%] pt-[9vh] lg:flex-row lg:gap-[8%]">
+      <div className="flex w-full flex-col lg:w-[26%]">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
           {DIGITAL_THUMBS.map((src, i) => (
             <Image
@@ -1264,7 +1306,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="flex flex-col items-start" style={{ width: "58.08vw" }}>
+      <div className="flex w-full flex-col items-start lg:w-[58.08vw]">
         <div className="relative w-full" style={{ aspectRatio: "2600 / 1231" }}>
           <Image
             src={`${basePath}/photos/digital-main.jpg`}
@@ -1281,14 +1323,14 @@ export default function Home() {
       <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
         CASES
       </span>
-      <div className="flex w-full items-start justify-center gap-[4%]">
+      <div className="flex w-full flex-wrap items-start justify-center gap-x-[4%] gap-y-10">
         {DIGITAL_CASES.map((c) => (
           <CaseCard
             key={c.key}
             label={caseLabels[c.key][lang]}
             image={c.image}
             href={c.href}
-            widthClass="w-[16%]"
+            widthClass="w-[42%] lg:w-[16%]"
           />
         ))}
       </div>

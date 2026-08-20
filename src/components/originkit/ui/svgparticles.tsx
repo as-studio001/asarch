@@ -164,6 +164,19 @@ function __OriginkitBase_ParticleImage(__props) {
         // canvas stays centered within it. Default 1 = old behavior
         // (trigger zone === canvas bounds exactly).
         hoverAreaScale = 1,
+        // Overrides the canvas's contrast drop-shadow (see the filter
+        // comment below) — callers needing extra legibility on a smaller
+        // canvas (e.g. a mobile layout, where the same particleCount reads
+        // sparser at a smaller physical size) can pass a stronger filter
+        // string here instead of the default.
+        dropShadowFilter = "drop-shadow(0 0 1.5px rgba(0,0,0,0.9)) drop-shadow(0 0 4px rgba(0,0,0,0.55))",
+        // Floor on the source-image sampling step (see initParticles()'s
+        // `gap` calculation) — particleCount alone saturates at this floor
+        // once it's high enough (gap = 150/particleCount, clamped down to
+        // minGap), so raising particleCount past ~75 has no visible effect
+        // unless minGap is also lowered. Default 2 matches the original,
+        // unchanged behavior; pass 1 for a denser field on a smaller canvas.
+        minGap = 2,
         ...props
     } = { ...COMPONENT_DEFAULTS, ...__props }
     const hover = hoverEnabled
@@ -237,6 +250,7 @@ function __OriginkitBase_ParticleImage(__props) {
         heightPct,
         scale,
         particleCount,
+        minGap,
         hover,
         hoverType,
         roamWidth,
@@ -321,6 +335,7 @@ function __OriginkitBase_ParticleImage(__props) {
             heightPct: hPct,
             scale: sc,
             particleCount: count,
+            minGap: minGp,
             hover: hOn,
             hoverType: ht,
             roamWidth: rw,
@@ -333,7 +348,7 @@ function __OriginkitBase_ParticleImage(__props) {
         const canvas = canvasRef.current
         if (!canvas) return
         clearTimeout(animTimerRef.current)
-        const gap = Math.max(2, Math.round(150 / Math.max(1, count)))
+        const gap = Math.max(minGp, Math.round(150 / Math.max(1, count)))
         const dpr = window.devicePixelRatio || 1
         canvas.width = Math.round(W * dpr)
         canvas.height = Math.round(H * dpr)
@@ -834,8 +849,7 @@ function __OriginkitBase_ParticleImage(__props) {
                         // faint outline so it stays legible regardless of
                         // what's behind it, without touching the particle
                         // color/physics logic itself.
-                        filter:
-                            "drop-shadow(0 0 1.5px rgba(0,0,0,0.9)) drop-shadow(0 0 4px rgba(0,0,0,0.55))",
+                        filter: dropShadowFilter,
                     }}
                 />
                 {!image && (
