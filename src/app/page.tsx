@@ -108,7 +108,6 @@ const DETAIL_THUMBS = [
   "detail-thumb-10.jpg",
   "detail-thumb-11.jpg",
   "detail-thumb-12.jpg",
-  "detail-thumb-13.jpg",
 ];
 const DETAIL_THUMB_INTERVAL_MS = 2000;
 
@@ -133,6 +132,8 @@ const DIGITAL_THUMBS: string[] = [
   "digital-thumb-2.jpg",
   "digital-thumb-3.jpg",
   "digital-thumb-4.jpg",
+  "digital-thumb-5.jpg",
+  "digital-thumb-6.jpg",
 ];
 const DIGITAL_THUMB_INTERVAL_MS = 2000;
 
@@ -338,7 +339,6 @@ export default function Home() {
       : DIGITAL_CASES.map((c) => ({ key: c.key, image: c.image, href: c.href, label: caseLabels[c.key][lang] }));
   const wrapperRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
-  const particleWrapRef = useRef<HTMLDivElement>(null);
   const chapter01Ref = useRef<HTMLElement>(null);
   const [chapter01Offset, setChapter01Offset] = useState(0);
   const chapter02Ref = useRef<HTMLElement>(null);
@@ -352,10 +352,10 @@ export default function Home() {
   const [exhibitThumbIndex, setExhibitThumbIndex] = useState(0);
   const [digitalThumbIndex, setDigitalThumbIndex] = useState(0);
   const [openGallery, setOpenGallery] = useState<string[] | null>(null);
-  // Drives the hero particle effect's density/contrast boost below (see
-  // the ParticleImage usage) — same lg (1024px) cutover used everywhere
-  // else on the page for the mobile/tablet-safe layout. Starts false
-  // (matches desktop) so SSR/first paint don't flash the boosted values.
+  // Drives the particle effect's density/contrast boost below (see the
+  // ParticleImage usage) — same lg (1024px) cutover used everywhere else
+  // on the page for the mobile/tablet-safe layout. Starts false (matches
+  // desktop) so SSR/first paint don't flash the boosted values.
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1023px)");
@@ -715,61 +715,31 @@ export default function Home() {
           />
         </svg>
 
-        {/* SVG particle effect — 150% of the original half-size box, scaled
-            from its top-left corner (kept fixed) growing right/down. The
-            translateY can't stay a self-referential "-50%" (that's 50% of
-            the element's OWN height, so it'd shift when height grows from
-            h-1/2 to h-3/4) — replaced with the equivalent fixed "-25vh"
-            (50% of the *original* h-1/2 box, computed against the h-screen
-            parent) so the top edge lands in the exact same place. */}
+        {/* Plain white text over the hero photo, at the same position the
+            particle effect used to occupy — kept alongside the standalone
+            interactive particle section below (between this hero and the
+            manifesto) per explicit request that both exist. */}
         <div
-          ref={particleWrapRef}
-          className="absolute top-1/2 left-0 h-3/4 w-3/4"
+          className="absolute top-1/2 left-0 flex h-3/4 w-3/4 items-center justify-center"
           style={{ transform: "translate(1cm, calc(-25vh - 1cm))" }}
         >
-          <ParticleImage
-            width="100%"
-            height="100%"
-            hoverAreaScale={1.2}
-            // Particles stay permanently assembled into the image instead
-            // of roaming/scattering when the cursor leaves — hoverEnabled
-            // only gates the assemble/scatter animation state, not the
-            // repulsion "push away from cursor" effect (repulsionEnabled,
-            // untouched below), so that sliding interactivity is unaffected.
-            hoverEnabled={false}
-            backgroundColor="transparent"
-            // gapPerWidth scales the sampling gap with the canvas's own
-            // CSS width (h-3/4 w-3/4 of the viewport), so particle density
-            // relative to the rendered "原型 X 建築" text stays constant
-            // regardless of screen size, instead of a fixed absolute gap
-            // making wider screens read progressively denser/finer and
-            // narrower ones progressively sparser (see gapPerWidth's
-            // comment in svgparticles.tsx). 600 is calibrated so a ~1600px
-            // viewport (this effect's box ≈ 1200px wide) lands on the same
-            // gap the old fixed-gap desktop default used. minGap=1 just
-            // floors it so extremely narrow screens never hit gap 0.
-            particleCount={180}
-            minGap={1}
-            gapPerWidth={600}
-            // Particles are drawn at the source image pixel's own alpha
-            // (soft/anti-aliased edges read as partially transparent),
-            // which left the white particles looking dim rather than
-            // bright white — boosted across both mobile and desktop.
-            alphaBoost={1.6}
-            dropShadowFilter={
-              isMobile
-                ? "drop-shadow(0 0 1.5px rgba(0,0,0,0.95)) drop-shadow(0 0 3px rgba(0,0,0,0.85)) drop-shadow(0 0 6px rgba(0,0,0,0.5))"
-                : undefined
-            }
-            imageConfig={{
-              image: `${basePath}/originkit/banner.png`,
-              mode: "fit",
-              scale: 5,
-              sizeUnit: "%",
-              widthPct: 100,
-              heightPct: 100,
-            }}
-          />
+          <div className="text-center">
+            <h2
+              className="text-4xl font-semibold text-white sm:text-6xl lg:text-7xl"
+              style={{
+                fontFamily: "var(--font-noto-serif-tc), 'Source Han Serif TC', serif",
+                letterSpacing: "0.15em",
+              }}
+            >
+              原型<span className="mx-3 sm:mx-5">×</span>建築
+            </h2>
+            <p
+              className="mt-5 text-xs text-white/60 sm:text-base"
+              style={{ letterSpacing: "0.3em" }}
+            >
+              Prototype architecture
+            </p>
+          </div>
         </div>
 
         {/* Bottom-edge vignette — fades the last 4cm of the screen to
@@ -785,11 +755,74 @@ export default function Home() {
       </section>
     </div>
 
+    {/* SVG particle effect — moved out of the hero photo into its own
+        standalone section between the hero photo and the manifesto, per
+        explicit request (went through a plain-text detour and back to
+        the original interactive particles — kept the density/brightness/
+        contrast tuning from that work). Box sized to ~80% of the box the
+        effect used to occupy (h-3/4 w-3/4 of a full h-screen hero →
+        60vw/45vh here). Section is content-height (not a fixed vh) with
+        an explicit 3cm bottom padding — see the matching pt-0 on the
+        Manifesto section right below — so the gap to it is exactly 3cm,
+        not whatever leftover space a fixed-height flex-centered box and
+        the Manifesto's own padding happened to add up to. */}
+    <section
+      className="relative flex items-center justify-center overflow-hidden bg-black py-16"
+      style={{ paddingBottom: "3cm" }}
+    >
+      <div className="relative" style={{ width: "60vw", height: "45vh" }}>
+        <ParticleImage
+          width="100%"
+          height="100%"
+          hoverAreaScale={1.2}
+          // Particles stay permanently assembled into the image instead
+          // of roaming/scattering when the cursor leaves — hoverEnabled
+          // only gates the assemble/scatter animation state, not the
+          // repulsion "push away from cursor" effect (repulsionEnabled,
+          // untouched below), so that sliding interactivity is unaffected.
+          hoverEnabled={false}
+          backgroundColor="transparent"
+          // gapPerWidth scales the sampling gap with the canvas's own CSS
+          // width, so particle density relative to the rendered
+          // "原型 X 建築" text stays constant regardless of screen size
+          // (see gapPerWidth's comment in svgparticles.tsx). 600 is
+          // calibrated so a ~1600px viewport (this box ≈ 960px wide)
+          // lands close to the old fixed-gap desktop default.
+          particleCount={180}
+          minGap={1}
+          gapPerWidth={600}
+          // Particles are drawn at the source image pixel's own alpha
+          // (soft/anti-aliased edges read as partially transparent),
+          // which left the white particles looking dim rather than
+          // bright white — boosted across both mobile and desktop.
+          alphaBoost={1.6}
+          dropShadowFilter={
+            isMobile
+              ? "drop-shadow(0 0 1.5px rgba(0,0,0,0.95)) drop-shadow(0 0 3px rgba(0,0,0,0.85)) drop-shadow(0 0 6px rgba(0,0,0,0.5))"
+              : undefined
+          }
+          imageConfig={{
+            image: `${basePath}/originkit/banner.png`,
+            mode: "fit",
+            scale: 5,
+            sizeUnit: "%",
+            widthPct: 100,
+            heightPct: 100,
+          }}
+        />
+      </div>
+    </section>
+
     {/* Manifesto — matches the existing subpage type convention: Noto Serif
         TC for both lines now (headline weight 600, subtitle weight 300 —
-        same family, lighter weight instead of the sans stack). */}
-    <section className="flex items-center justify-center bg-black px-6 py-32 text-center sm:py-40">
-      <div style={{ marginTop: "5cm" }}>
+        same family, lighter weight instead of the sans stack). Top padding
+        zeroed (was py-32/40 symmetric + a 5cm inner marginTop) — the gap
+        to the particle section above is now controlled entirely by that
+        section's own 3cm bottom padding instead of being split/stacked
+        across both sections. Bottom padding (spacing before Chapter 01)
+        unchanged. */}
+    <section className="flex items-center justify-center bg-black px-6 pt-0 pb-32 text-center sm:pb-40">
+      <div>
         <h2
           className="text-[1.5rem] leading-snug font-semibold text-white sm:text-[2.4rem]"
           style={{
