@@ -91,6 +91,20 @@ export default function Footer() {
           ))}
         </div>
       </div>
+      <div
+        className="mx-auto mt-8 max-w-[1200px] border-t pt-6"
+        style={{ borderColor: "oklch(0.22 0 0)" }}
+      >
+        <a
+          href="https://as-studio001.github.io/Internal-Pages/admin/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs transition-opacity hover:opacity-70"
+          style={{ color: "oklch(0.45 0 0)" }}
+        >
+          後台管理
+        </a>
+      </div>
     </footer>
   );
 }
