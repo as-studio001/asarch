@@ -718,14 +718,17 @@ export default function Home() {
         {/* Plain white text over the hero photo, at the same position the
             particle effect used to occupy — kept alongside the standalone
             interactive particle section below (between this hero and the
-            manifesto) per explicit request that both exist. */}
+            manifesto) per explicit request that both exist. Shifted down
+            1cm from that original spot (Y translate's "-1cm" cancelled to
+            "+1cm" net, i.e. -25vh only) and sized 120% (text-4xl/6xl/7xl
+            -> 2.7rem/4.5rem/5.4rem etc.), both per explicit request. */}
         <div
           className="absolute top-1/2 left-0 flex h-3/4 w-3/4 items-center justify-center"
-          style={{ transform: "translate(1cm, calc(-25vh - 1cm))" }}
+          style={{ transform: "translate(1cm, -25vh)" }}
         >
           <div className="text-center">
             <h2
-              className="text-4xl font-semibold text-white sm:text-6xl lg:text-7xl"
+              className="text-[2.7rem] font-semibold text-white sm:text-[4.5rem] lg:text-[5.4rem]"
               style={{
                 fontFamily: "var(--font-noto-serif-tc), 'Source Han Serif TC', serif",
                 letterSpacing: "0.15em",
@@ -734,7 +737,7 @@ export default function Home() {
               原型<span className="mx-3 sm:mx-5">×</span>建築
             </h2>
             <p
-              className="mt-5 text-xs text-white/60 sm:text-base"
+              className="mt-5 text-[0.9rem] text-white/60 sm:text-[1.2rem]"
               style={{ letterSpacing: "0.3em" }}
             >
               Prototype architecture
