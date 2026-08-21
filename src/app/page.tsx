@@ -128,12 +128,19 @@ const EXHIBIT_THUMB_INTERVAL_MS = 2000;
 // Section 9 (Chapter 04, 原型數位) thumbnail carousel — same template as
 // the other chapters.
 const DIGITAL_THUMBS: string[] = [
-  "digital-thumb-1.jpg",
-  "digital-thumb-2.jpg",
-  "digital-thumb-3.jpg",
-  "digital-thumb-4.jpg",
-  "digital-thumb-5.jpg",
-  "digital-thumb-6.jpg",
+  "digital-thumb-1.png",
+  "digital-thumb-2.png",
+  "digital-thumb-3.png",
+  "digital-thumb-4.png",
+  "digital-thumb-5.png",
+  "digital-thumb-6.png",
+  "digital-thumb-7.png",
+  "digital-thumb-8.png",
+  "digital-thumb-9.png",
+  "digital-thumb-10.png",
+  "digital-thumb-11.png",
+  "digital-thumb-12.png",
+  "digital-thumb-13.png",
 ];
 const DIGITAL_THUMB_INTERVAL_MS = 2000;
 
@@ -734,13 +741,13 @@ export default function Home() {
                 letterSpacing: "0.15em",
               }}
             >
-              原型<span className="mx-3 sm:mx-5">×</span>建築
+              原型建築
             </h2>
             <p
               className="mt-5 text-[0.9rem] text-white/60 sm:text-[1.2rem]"
               style={{ letterSpacing: "0.3em" }}
             >
-              Prototype architecture
+              AS.Studio
             </p>
           </div>
         </div>
@@ -1369,14 +1376,23 @@ export default function Home() {
         chapters. Deliberately NOT h-screen, same reasoning as Section 4/5/7. */}
     <section className="flex w-full flex-col items-start gap-10 bg-black px-[6%] pt-[9vh] lg:flex-row lg:gap-[8%]">
       <div className="flex w-full flex-col lg:w-[26%]">
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-white/10">
+        {/* bg-black (not bg-white/10 like the other chapters) — these are
+            object-contain icon illustrations, not cropped-to-fill photos,
+            so the empty space around each icon shows the container's own
+            background. bg-white/10 read as grey against the page's black;
+            these icons are already on a black background themselves. */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-black">
           {digitalThumbSrcs.map((src, i) => (
             <Image
               key={src}
               src={src}
               alt={`原型數位 縮圖 ${i + 1}`}
               fill
-              className="object-cover transition-opacity duration-700"
+              // object-contain (not -cover, like the other chapters) since
+              // these are icon illustrations, not photos — they need to
+              // stay fully visible/uncropped, scaled proportionally to
+              // fit the box instead of cropped to fill it.
+              className="object-contain transition-opacity duration-700"
               style={{ opacity: i === digitalThumbIndex ? 1 : 0 }}
             />
           ))}
