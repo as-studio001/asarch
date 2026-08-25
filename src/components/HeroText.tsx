@@ -117,6 +117,25 @@ export default function HeroText({ hero }: HeroTextProps) {
     return () => window.removeEventListener("message", onMessage);
   }, [preview]);
 
+  // 上一步／下一步的歷史紀錄本身存在後台（父頁面）那邊，不是這裡——
+  // 但如果焦點剛好還留在這個 iframe 裡（例如剛拖完文字、還沒點回外層
+  // 面板），keydown 事件出不了這個 iframe 的 document，父頁面自己的
+  // Ctrl+Z/Y 監聽收不到，所以這裡也要攔一次，攔到了只是轉發、不在這裡
+  // 處理實際的復原邏輯。
+  useEffect(() => {
+    if (!preview) return;
+    function onKeyDown(e: KeyboardEvent) {
+      const key = e.key ? e.key.toLowerCase() : "";
+      const isUndo = (e.ctrlKey || e.metaKey) && !e.shiftKey && key === "z";
+      const isRedo = (e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey));
+      if (!isUndo && !isRedo) return;
+      e.preventDefault();
+      window.parent.postMessage({ type: isUndo ? "hero-preview-undo" : "hero-preview-redo" }, "*");
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [preview]);
+
   const v = mergeHero(hero, override);
 
   function handlePositionPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
