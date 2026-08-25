@@ -111,7 +111,7 @@ export default function Header() {
             </div>
           )}
         </div>
-        <a href="https://www.mashup.com.tw/as%20studio/" className="flex items-center gap-3">
+        <a href="https://www.as-structure.com/" className="flex items-center gap-3">
           <Image
             src={`${basePath}/favicon-logo.png`}
             alt="原型結構 as.studio"
