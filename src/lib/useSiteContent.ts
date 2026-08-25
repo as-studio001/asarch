@@ -36,17 +36,22 @@ export interface DeclarationContent {
 }
 
 // SECTION 1（首頁最上方全螢幕大圖）疊在照片上的兩行文字設定——底圖跟
-// 光線遮罩效果本身不在這份內容裡，是版型固定的，後台也刻意不開放編輯，
-// 只有這兩行文字的內容/粗細/大小比例/位置會經由這裡覆蓋 page.tsx 原本
-// 寫死的預設值。所有欄位都是選填：後台的 hero.json 讀不到，或某個欄位
-// 是空的，page.tsx 都會退回原本寫死的預設，不會讓這個區塊跑版或空白。
+// 光線遮罩效果本身不在這份內容裡，是版型固定的，後台也刻意不開放編輯。
+// 後台是用視覺化編輯器（在預覽畫面上直接拖曳位置／拖曳縮放字體，其餘
+// 參數用滑塊調）寫這份資料，細節見 HeroText.tsx：offsetX/offsetY 是
+// 拖曳結束當下讀到的絕對像素位置（"123.40px" 這種字串）、scale 是拖曳
+// 縮放手把算出來的單一縮放倍率（兩行文字一起等比縮放，不是各自的
+// 字級）。所有欄位都選填：後台的 hero.json 讀不到，或某個欄位是空的，
+// HeroText.tsx 都會退回它自己內建的預設值，不會讓這個區塊跑版或空白。
 export interface HeroContent {
   line1?: string;
   line1Weight?: string;
-  line1Scale?: number;
+  line1LetterSpacing?: number;
   line2?: string;
   line2Weight?: string;
-  line2Scale?: number;
+  line2LetterSpacing?: number;
+  lineGap?: number;
+  scale?: number;
   offsetX?: string;
   offsetY?: string;
 }
