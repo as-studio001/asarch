@@ -6,10 +6,11 @@ import ParticleImage from "@/components/originkit/ui/svgparticles";
 import RotatingGlobe from "@/components/originkit/ui/RotatingGlobe";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GalleryOverlay from "@/components/GalleryOverlay";
 import CaseCard from "@/components/CaseCard";
+import GenericChapterSection from "@/components/GenericChapterSection";
+import HeroText from "@/components/HeroText";
 import { useLanguage } from "@/lib/i18n";
-import { useSiteContent } from "@/lib/useSiteContent";
+import { useSiteContent, useExtraChapters } from "@/lib/useSiteContent";
 import {
   manifestoHeadlineLines,
   manifestoMotto,
@@ -144,35 +145,6 @@ const DIGITAL_THUMBS: string[] = [
 ];
 const DIGITAL_THUMB_INTERVAL_MS = 2000;
 
-// ADA建築展 masonry-gallery photos.
-const ADA_GALLERY = [
-  "gallery-ada-1.jpg",
-  "gallery-ada-2.jpg",
-  "gallery-ada-3.jpg",
-  "gallery-ada-4.jpg",
-  "gallery-ada-5.jpg",
-  "gallery-ada-6.jpg",
-  "gallery-ada-7.jpg",
-  "gallery-ada-8.jpg",
-  "gallery-ada-9.jpg",
-  "gallery-ada-10.jpg",
-  "gallery-ada-11.jpg",
-  "gallery-ada-12.jpg",
-  "gallery-ada-13.jpg",
-];
-
-// 構竹林鐵 masonry-gallery photos.
-const BAMBOO_GALLERY = Array.from(
-  { length: 26 },
-  (_, i) => `gallery-bamboo-${i + 1}.jpg`
-);
-
-// 台北藝廊展 masonry-gallery photos.
-const TAIPEI_GALLERY = Array.from(
-  { length: 23 },
-  (_, i) => `gallery-taipei-${i + 1}.jpg`
-);
-
 // Section 4.5 case cards (replaces the old restore "MORE" popup — cases
 // now get their own section instead of a modal). Images are placeholders
 // (reusing existing thumbnails) until real per-case photos are supplied.
@@ -195,9 +167,19 @@ const RESTORE_CASES = [
 ];
 
 // Section 7.5 case cards (same treatment as RESTORE_CASES/Section 4.5, now
-// applied to 原型展覽). Three of the five open the masonry GalleryOverlay
-// instead of linking out — same split the old exhibit MORE popup had.
-const EXHIBIT_CASES = [
+// applied to 原型展覽) — same live-data-with-fallback pattern as the other
+// three chapters, from content/site/chapter-exhibit.json's `cases[]`.
+//
+// 2026-08-25: ADA建築展/構竹林鐵/台北藝廊展 used to open a masonry
+// GalleryOverlay instead of linking out (each backed by a hardcoded array
+// of dozens of local photo filenames, which the admin's simple photo+
+// link+label editor couldn't manage). They're now plain 一般子網頁 cases
+// in the admin like everything else — a real write-up replaces the
+// gallery there later — so the onClick/gallery split, ADA_GALLERY/
+// BAMBOO_GALLERY/TAIPEI_GALLERY, EXHIBIT_GALLERY_CASES, and GalleryOverlay
+// are all gone. EXHIBIT_LINK_CASES below is only the fallback used until
+// that fetch resolves (or if it's ever empty).
+const EXHIBIT_LINK_CASES = [
   {
     key: "exhibit-tnhs",
     href: "https://www.tnhs.com.tw/",
@@ -205,17 +187,17 @@ const EXHIBIT_CASES = [
   },
   {
     key: "exhibit-ada",
-    gallery: ADA_GALLERY,
+    href: "https://as-studio001.github.io/Internal-Pages/?case=ada-architecture-exhibition",
     image: "gallery-ada-1.jpg",
   },
   {
     key: "exhibit-bamboo",
-    gallery: BAMBOO_GALLERY,
+    href: "https://as-studio001.github.io/Internal-Pages/?case=bamboo-forest-railway-exhibit",
     image: "case-exhibit-bamboo.jpg",
   },
   {
     key: "exhibit-taipei",
-    gallery: TAIPEI_GALLERY,
+    href: "https://as-studio001.github.io/Internal-Pages/?case=taipei-gallery-exhibition",
     image: "gallery-taipei-1.jpg",
   },
   // 台南建築三年展 cancelled for now — drop back in with `{ key:
@@ -240,8 +222,7 @@ const DETAIL_CASES = [
 ];
 
 // Section 9.5 case cards (same treatment as the other chapters' CASES
-// bands). Unlike its EXHIBIT_CASES entry, "構竹林鐵" here links straight
-// out rather than opening BAMBOO_GALLERY, per explicit request.
+// bands).
 const DIGITAL_CASES = [
   {
     key: "digital-woodyard",
@@ -283,6 +264,9 @@ export default function Home() {
   // 這裡在瀏覽器端抓取最新內容；抓不到（離線、還沒設定過）就 fallback
   // 回原本寫死在 translations.ts/page.tsx 裡的文字，畫面永遠不會空白。
   const siteContent = useSiteContent();
+  // 之後在後台新增的章節（除了下面這 4 個手工調校過的固定章節）都放
+  // 在這裡，用共用的簡化版型顯示，不用改這支檔案。
+  const extraChapters = useExtraChapters();
   const declarationHeadline = (i: 0 | 1) =>
     siteContent.declaration?.headline?.[i]?.[lang] ?? manifestoHeadlineLines[lang][i];
   const declarationParagraph = (i: 0 | 1 | 2 | 3) =>
@@ -335,6 +319,15 @@ export default function Home() {
           label: c.label[lang] ?? c.label["zh-Hant"],
         }))
       : DETAIL_CASES.map((c) => ({ key: c.key, image: c.image, href: c.href, label: caseLabels[c.key][lang] }));
+  const exhibitCaseItems =
+    siteContent.exhibit?.cases && siteContent.exhibit.cases.length
+      ? siteContent.exhibit.cases.map((c) => ({
+          key: c.href,
+          image: c.image,
+          href: c.href,
+          label: c.label[lang] ?? c.label["zh-Hant"],
+        }))
+      : EXHIBIT_LINK_CASES.map((c) => ({ key: c.key, image: c.image, href: c.href, label: caseLabels[c.key][lang] }));
   const digitalCaseItems =
     siteContent.digital?.cases && siteContent.digital.cases.length
       ? siteContent.digital.cases.map((c) => ({
@@ -358,7 +351,6 @@ export default function Home() {
   const [detailThumbIndex, setDetailThumbIndex] = useState(0);
   const [exhibitThumbIndex, setExhibitThumbIndex] = useState(0);
   const [digitalThumbIndex, setDigitalThumbIndex] = useState(0);
-  const [openGallery, setOpenGallery] = useState<string[] | null>(null);
   // Drives the particle effect's density/contrast boost below (see the
   // ParticleImage usage) — same lg (1024px) cutover used everywhere else
   // on the page for the mobile/tablet-safe layout. Starts false (matches
@@ -619,16 +611,6 @@ export default function Home() {
   const showNextDetailThumb = () =>
     setDetailThumbIndex((i) => (i + 1) % DETAIL_THUMBS.length);
 
-  // Escape closes the photo gallery overlay, same as clicking the backdrop.
-  useEffect(() => {
-    if (!openGallery) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpenGallery(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [openGallery]);
-
   const showPrevRestoreThumb = () =>
     setRestoreThumbIndex(
       (i) => (i - 1 + RESTORE_THUMBS.length) % RESTORE_THUMBS.length
@@ -729,28 +711,13 @@ export default function Home() {
             1cm from that original spot (Y translate's "-1cm" cancelled to
             "+1cm" net, i.e. -25vh only) and sized 120% (text-4xl/6xl/7xl
             -> 2.7rem/4.5rem/5.4rem etc.), both per explicit request. */}
-        <div
-          className="absolute top-1/2 left-0 flex h-3/4 w-3/4 items-center justify-center"
-          style={{ transform: "translate(1cm, -25vh)" }}
-        >
-          <div className="text-center">
-            <h2
-              className="text-[2.7rem] font-semibold text-white sm:text-[4.5rem] lg:text-[5.4rem]"
-              style={{
-                fontFamily: "var(--font-noto-serif-tc), 'Source Han Serif TC', serif",
-                letterSpacing: "0.15em",
-              }}
-            >
-              原型建築
-            </h2>
-            <p
-              className="mt-5 text-[0.9rem] text-white/60 sm:text-[1.2rem]"
-              style={{ letterSpacing: "0.3em" }}
-            >
-              AS.Studio
-            </p>
-          </div>
-        </div>
+        {/* 這兩行文字（內容／粗細／字距／行距／大小／位置）從後台「主網站
+            內容 → 首頁最上方文字（SECTION 1）」的視覺化編輯器調整——後台
+            可以直接在預覽畫面上拖曳位置、拖右下角圓點縮放大小，粗細/內容/
+            行距/字距則是滑塊。讀不到資料或欄位是空的都退回 HeroText 自己
+            內建的預設值。底圖照片跟上面的光線遮罩效果完全不歸 HeroText
+            管，後台也刻意沒開放編輯這兩個。 */}
+        <HeroText hero={siteContent.hero} />
 
         {/* Bottom-edge vignette — fades the last 4cm of the screen to
             black, independent of scroll, sitting above everything else
@@ -920,7 +887,7 @@ export default function Home() {
           className="text-xs text-white/60 sm:text-sm"
           style={{ letterSpacing: "0.3em" }}
         >
-          CHAPTER
+          CHAPTER I
         </span>
         <h2
           className="mt-4 text-4xl leading-tight font-semibold text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] whitespace-nowrap sm:text-6xl"
@@ -1080,7 +1047,7 @@ export default function Home() {
           className="text-xs text-white/60 sm:text-sm"
           style={{ letterSpacing: "0.3em" }}
         >
-          CHAPTER
+          CHAPTER II
         </span>
         <h2
           className="mt-4 text-4xl leading-tight font-semibold text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] whitespace-nowrap sm:text-6xl"
@@ -1215,7 +1182,7 @@ export default function Home() {
           className="text-xs text-white/60 sm:text-sm"
           style={{ letterSpacing: "0.3em" }}
         >
-          CHAPTER
+          CHAPTER III
         </span>
         <h2
           className="mt-4 text-4xl leading-tight font-semibold text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] whitespace-nowrap sm:text-6xl"
@@ -1299,23 +1266,19 @@ export default function Home() {
     </section>
 
     {/* Section 7.5 — replaces the old exhibit "MORE" popup, same treatment
-        as Section 4.5. Cards that open a gallery use CaseCard's onClick
-        form; the two plain links use its href form. id targeted by the
-        header hamburger menu's ADA建築展/構竹林鐵/台北藝廊展 entries,
-        which just scroll here (the actual gallery still opens via clicking
-        the card itself, not from the header). */}
+        as Section 4.5. All cards are plain links now (see EXHIBIT_LINK_CASES
+        above for the 2026-08-25 gallery-overlay removal). */}
     <section id="cases-exhibit" className="flex w-full flex-col items-center gap-16 bg-black px-[6%] py-[1cm]">
       <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
         CASES
       </span>
       <div className="flex w-full flex-wrap items-start justify-center gap-x-[2%] gap-y-10">
-        {EXHIBIT_CASES.map((c) => (
+        {exhibitCaseItems.map((c) => (
           <CaseCard
             key={c.key}
-            label={caseLabels[c.key][lang]}
+            label={c.label}
             image={c.image}
             href={c.href}
-            onClick={c.gallery ? () => setOpenGallery(c.gallery) : undefined}
             widthClass="w-[42%] lg:w-[20%]"
           />
         ))}
@@ -1358,7 +1321,7 @@ export default function Home() {
           className="text-xs text-white/60 sm:text-sm"
           style={{ letterSpacing: "0.3em" }}
         >
-          CHAPTER
+          CHAPTER IV
         </span>
         <h2
           className="mt-4 text-4xl leading-tight font-semibold text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] whitespace-nowrap sm:text-6xl"
@@ -1464,13 +1427,11 @@ export default function Home() {
       </div>
     </section>
 
-    <Footer />
+    {extraChapters.map((ch) => (
+      <GenericChapterSection key={ch.slug} content={ch.content} />
+    ))}
 
-    <GalleryOverlay
-      open={openGallery !== null}
-      images={openGallery ?? []}
-      onClose={() => setOpenGallery(null)}
-    />
+    <Footer />
     </>
   );
 }

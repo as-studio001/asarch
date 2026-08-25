@@ -35,7 +35,29 @@ export interface DeclarationContent {
   paragraphs: Lang5[];
 }
 
+// SECTION 1（首頁最上方全螢幕大圖）疊在照片上的兩行文字設定——底圖跟
+// 光線遮罩效果本身不在這份內容裡，是版型固定的，後台也刻意不開放編輯。
+// 後台是用視覺化編輯器（在預覽畫面上直接拖曳位置／拖曳縮放字體，其餘
+// 參數用滑塊調）寫這份資料，細節見 HeroText.tsx：offsetX/offsetY 是
+// 拖曳結束當下讀到的絕對像素位置（"123.40px" 這種字串）、scale 是拖曳
+// 縮放手把算出來的單一縮放倍率（兩行文字一起等比縮放，不是各自的
+// 字級）。所有欄位都選填：後台的 hero.json 讀不到，或某個欄位是空的，
+// HeroText.tsx 都會退回它自己內建的預設值，不會讓這個區塊跑版或空白。
+export interface HeroContent {
+  line1?: string;
+  line1Weight?: string;
+  line1LetterSpacing?: number;
+  line2?: string;
+  line2Weight?: string;
+  line2LetterSpacing?: number;
+  lineGap?: number;
+  scale?: number;
+  offsetX?: string;
+  offsetY?: string;
+}
+
 export interface SiteContent {
+  hero: HeroContent | null;
   declaration: DeclarationContent | null;
   restore: ChapterContent | null;
   detail: ChapterContent | null;
@@ -53,8 +75,81 @@ async function fetchJson<T>(name: string): Promise<T | null> {
   }
 }
 
+export interface CaseLink {
+  label: string;
+  href: string;
+}
+
+interface CaseLinksContent {
+  links: CaseLink[];
+}
+
+// Feeds Header's hamburger menu. Not hand-edited in the admin — Internal-
+// Pages regenerates content/site/case-links.json straight from whatever
+// cases currently exist under content/projects/ every time one is saved or
+// deleted (see admin/index.html's regenerateCaseLinksManifest()), so this
+// list always mirrors "建築案例" 1:1 with zero extra editing step. Split out
+// from useSiteContent since Header only needs this one small list, not all
+// 5 chapter/declaration files.
+export function useCaseLinks(): CaseLink[] | null {
+  const [links, setLinks] = useState<CaseLink[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchJson<CaseLinksContent>("case-links").then((data) => {
+      if (!cancelled && data?.links?.length) setLinks(data.links);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return links;
+}
+
+export interface ExtraChapter {
+  slug: string;
+  content: ChapterContent;
+}
+
+interface ExtraChaptersIndex {
+  chapters: string[];
+}
+
+// 除了首頁那 4 個手工調校捲動效果的固定章節之外，之後在 Internal-Pages
+// 後台新增的章節都走這份清單——後台存檔時會把 content/site/extra-
+// chapters.json 更新成目前所有自訂章節的檔名，這裡抓這份索引、再逐一
+// 抓每個章節自己的 JSON。新章節統一用 GenericChapterSection 這個簡化
+// 版型顯示，不會有原本 4 個章節那種客製化捲動效果（那是手工調校、
+// 沒辦法變成「後台自己新增就好」的模板）。
+export function useExtraChapters(): ExtraChapter[] {
+  const [chapters, setChapters] = useState<ExtraChapter[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchJson<ExtraChaptersIndex>("extra-chapters").then(async (index) => {
+      if (cancelled || !index?.chapters?.length) return;
+      const results = await Promise.all(
+        index.chapters.map(async (slug) => {
+          const content = await fetchJson<ChapterContent>(slug);
+          return content ? { slug, content } : null;
+        })
+      );
+      if (!cancelled) {
+        setChapters(results.filter((c): c is ExtraChapter => c !== null));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return chapters;
+}
+
 export function useSiteContent(): SiteContent {
   const [content, setContent] = useState<SiteContent>({
+    hero: null,
     declaration: null,
     restore: null,
     detail: null,
@@ -65,14 +160,15 @@ export function useSiteContent(): SiteContent {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
+      fetchJson<HeroContent>("hero"),
       fetchJson<DeclarationContent>("declaration"),
       fetchJson<ChapterContent>("chapter-restore"),
       fetchJson<ChapterContent>("chapter-detail"),
       fetchJson<ChapterContent>("chapter-exhibit"),
       fetchJson<ChapterContent>("chapter-digital"),
-    ]).then(([declaration, restore, detail, exhibit, digital]) => {
+    ]).then(([hero, declaration, restore, detail, exhibit, digital]) => {
       if (cancelled) return;
-      setContent({ declaration, restore, detail, exhibit, digital });
+      setContent({ hero, declaration, restore, detail, exhibit, digital });
     });
     return () => {
       cancelled = true;
