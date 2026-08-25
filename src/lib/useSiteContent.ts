@@ -85,6 +85,46 @@ export function useCaseLinks(): CaseLink[] | null {
   return links;
 }
 
+export interface ExtraChapter {
+  slug: string;
+  content: ChapterContent;
+}
+
+interface ExtraChaptersIndex {
+  chapters: string[];
+}
+
+// 除了首頁那 4 個手工調校捲動效果的固定章節之外，之後在 Internal-Pages
+// 後台新增的章節都走這份清單——後台存檔時會把 content/site/extra-
+// chapters.json 更新成目前所有自訂章節的檔名，這裡抓這份索引、再逐一
+// 抓每個章節自己的 JSON。新章節統一用 GenericChapterSection 這個簡化
+// 版型顯示，不會有原本 4 個章節那種客製化捲動效果（那是手工調校、
+// 沒辦法變成「後台自己新增就好」的模板）。
+export function useExtraChapters(): ExtraChapter[] {
+  const [chapters, setChapters] = useState<ExtraChapter[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchJson<ExtraChaptersIndex>("extra-chapters").then(async (index) => {
+      if (cancelled || !index?.chapters?.length) return;
+      const results = await Promise.all(
+        index.chapters.map(async (slug) => {
+          const content = await fetchJson<ChapterContent>(slug);
+          return content ? { slug, content } : null;
+        })
+      );
+      if (!cancelled) {
+        setChapters(results.filter((c): c is ExtraChapter => c !== null));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return chapters;
+}
+
 export function useSiteContent(): SiteContent {
   const [content, setContent] = useState<SiteContent>({
     declaration: null,

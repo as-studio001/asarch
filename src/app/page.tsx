@@ -8,8 +8,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import GalleryOverlay from "@/components/GalleryOverlay";
 import CaseCard from "@/components/CaseCard";
+import GenericChapterSection from "@/components/GenericChapterSection";
 import { useLanguage } from "@/lib/i18n";
-import { useSiteContent } from "@/lib/useSiteContent";
+import { useSiteContent, useExtraChapters } from "@/lib/useSiteContent";
 import {
   manifestoHeadlineLines,
   manifestoMotto,
@@ -295,6 +296,9 @@ export default function Home() {
   // 這裡在瀏覽器端抓取最新內容；抓不到（離線、還沒設定過）就 fallback
   // 回原本寫死在 translations.ts/page.tsx 裡的文字，畫面永遠不會空白。
   const siteContent = useSiteContent();
+  // 之後在後台新增的章節（除了下面這 4 個手工調校過的固定章節）都放
+  // 在這裡，用共用的簡化版型顯示，不用改這支檔案。
+  const extraChapters = useExtraChapters();
   const declarationHeadline = (i: 0 | 1) =>
     siteContent.declaration?.headline?.[i]?.[lang] ?? manifestoHeadlineLines[lang][i];
   const declarationParagraph = (i: 0 | 1 | 2 | 3) =>
@@ -1492,6 +1496,10 @@ export default function Home() {
         ))}
       </div>
     </section>
+
+    {extraChapters.map((ch) => (
+      <GenericChapterSection key={ch.slug} content={ch.content} />
+    ))}
 
     <Footer />
 
