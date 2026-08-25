@@ -6,7 +6,6 @@ import ParticleImage from "@/components/originkit/ui/svgparticles";
 import RotatingGlobe from "@/components/originkit/ui/RotatingGlobe";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GalleryOverlay from "@/components/GalleryOverlay";
 import CaseCard from "@/components/CaseCard";
 import GenericChapterSection from "@/components/GenericChapterSection";
 import { useLanguage } from "@/lib/i18n";
@@ -145,35 +144,6 @@ const DIGITAL_THUMBS: string[] = [
 ];
 const DIGITAL_THUMB_INTERVAL_MS = 2000;
 
-// ADA建築展 masonry-gallery photos.
-const ADA_GALLERY = [
-  "gallery-ada-1.jpg",
-  "gallery-ada-2.jpg",
-  "gallery-ada-3.jpg",
-  "gallery-ada-4.jpg",
-  "gallery-ada-5.jpg",
-  "gallery-ada-6.jpg",
-  "gallery-ada-7.jpg",
-  "gallery-ada-8.jpg",
-  "gallery-ada-9.jpg",
-  "gallery-ada-10.jpg",
-  "gallery-ada-11.jpg",
-  "gallery-ada-12.jpg",
-  "gallery-ada-13.jpg",
-];
-
-// 構竹林鐵 masonry-gallery photos.
-const BAMBOO_GALLERY = Array.from(
-  { length: 26 },
-  (_, i) => `gallery-bamboo-${i + 1}.jpg`
-);
-
-// 台北藝廊展 masonry-gallery photos.
-const TAIPEI_GALLERY = Array.from(
-  { length: 23 },
-  (_, i) => `gallery-taipei-${i + 1}.jpg`
-);
-
 // Section 4.5 case cards (replaces the old restore "MORE" popup — cases
 // now get their own section instead of a modal). Images are placeholders
 // (reusing existing thumbnails) until real per-case photos are supplied.
@@ -196,44 +166,42 @@ const RESTORE_CASES = [
 ];
 
 // Section 7.5 case cards (same treatment as RESTORE_CASES/Section 4.5, now
-// applied to 原型展覽). Three of the five open the masonry GalleryOverlay
-// instead of linking out — same split the old exhibit MORE popup had.
+// applied to 原型展覽) — same live-data-with-fallback pattern as the other
+// three chapters, from content/site/chapter-exhibit.json's `cases[]`.
 //
-// Unlike RESTORE_CASES/DETAIL_CASES/DIGITAL_CASES, this chapter's cards are
-// split in two: the 3 gallery-opening ones stay hardcoded here (their
-// `gallery` arrays are dozens of local filenames — not something the
-// Internal-Pages admin's simple photo+link+label editor can manage), while
-// the plain-link one(s) now come from content/site/chapter-exhibit.json's
-// `cases[]` — same live-data-with-fallback pattern as the other three
-// chapters — so the admin can add/edit/replace them. EXHIBIT_LINK_CASES
-// below is only the fallback used until that fetch resolves (or if it's
-// ever empty).
-const EXHIBIT_GALLERY_CASES = [
-  {
-    key: "exhibit-ada",
-    gallery: ADA_GALLERY,
-    image: "gallery-ada-1.jpg",
-  },
-  {
-    key: "exhibit-bamboo",
-    gallery: BAMBOO_GALLERY,
-    image: "case-exhibit-bamboo.jpg",
-  },
-  {
-    key: "exhibit-taipei",
-    gallery: TAIPEI_GALLERY,
-    image: "gallery-taipei-1.jpg",
-  },
-  // 台南建築三年展 cancelled for now — drop back in with `{ key:
-  // "exhibit-triennial", href: "https://asas2026.wixsite.com/mysite/...",
-  // image: "..." }` (plus a matching entry in caseLabels) if it comes back.
-];
+// 2026-08-25: ADA建築展/構竹林鐵/台北藝廊展 used to open a masonry
+// GalleryOverlay instead of linking out (each backed by a hardcoded array
+// of dozens of local photo filenames, which the admin's simple photo+
+// link+label editor couldn't manage). They're now plain 一般子網頁 cases
+// in the admin like everything else — a real write-up replaces the
+// gallery there later — so the onClick/gallery split, ADA_GALLERY/
+// BAMBOO_GALLERY/TAIPEI_GALLERY, EXHIBIT_GALLERY_CASES, and GalleryOverlay
+// are all gone. EXHIBIT_LINK_CASES below is only the fallback used until
+// that fetch resolves (or if it's ever empty).
 const EXHIBIT_LINK_CASES = [
   {
     key: "exhibit-tnhs",
     href: "https://www.tnhs.com.tw/",
     image: "case-exhibit-tnhs.jpg",
   },
+  {
+    key: "exhibit-ada",
+    href: "https://as-studio001.github.io/Internal-Pages/?case=ada-architecture-exhibition",
+    image: "gallery-ada-1.jpg",
+  },
+  {
+    key: "exhibit-bamboo",
+    href: "https://as-studio001.github.io/Internal-Pages/?case=bamboo-forest-railway-exhibit",
+    image: "case-exhibit-bamboo.jpg",
+  },
+  {
+    key: "exhibit-taipei",
+    href: "https://as-studio001.github.io/Internal-Pages/?case=taipei-gallery-exhibition",
+    image: "gallery-taipei-1.jpg",
+  },
+  // 台南建築三年展 cancelled for now — drop back in with `{ key:
+  // "exhibit-triennial", href: "https://asas2026.wixsite.com/mysite/...",
+  // image: "..." }` (plus a matching entry in caseLabels) if it comes back.
 ];
 
 // Section 5.5 case cards (same treatment as RESTORE_CASES/EXHIBIT_CASES —
@@ -253,8 +221,7 @@ const DETAIL_CASES = [
 ];
 
 // Section 9.5 case cards (same treatment as the other chapters' CASES
-// bands). Unlike its EXHIBIT_CASES entry, "構竹林鐵" here links straight
-// out rather than opening BAMBOO_GALLERY, per explicit request.
+// bands).
 const DIGITAL_CASES = [
   {
     key: "digital-woodyard",
@@ -383,7 +350,6 @@ export default function Home() {
   const [detailThumbIndex, setDetailThumbIndex] = useState(0);
   const [exhibitThumbIndex, setExhibitThumbIndex] = useState(0);
   const [digitalThumbIndex, setDigitalThumbIndex] = useState(0);
-  const [openGallery, setOpenGallery] = useState<string[] | null>(null);
   // Drives the particle effect's density/contrast boost below (see the
   // ParticleImage usage) — same lg (1024px) cutover used everywhere else
   // on the page for the mobile/tablet-safe layout. Starts false (matches
@@ -643,16 +609,6 @@ export default function Home() {
     );
   const showNextDetailThumb = () =>
     setDetailThumbIndex((i) => (i + 1) % DETAIL_THUMBS.length);
-
-  // Escape closes the photo gallery overlay, same as clicking the backdrop.
-  useEffect(() => {
-    if (!openGallery) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpenGallery(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [openGallery]);
 
   const showPrevRestoreThumb = () =>
     setRestoreThumbIndex(
@@ -1324,11 +1280,8 @@ export default function Home() {
     </section>
 
     {/* Section 7.5 — replaces the old exhibit "MORE" popup, same treatment
-        as Section 4.5. Cards that open a gallery use CaseCard's onClick
-        form; the two plain links use its href form. id targeted by the
-        header hamburger menu's ADA建築展/構竹林鐵/台北藝廊展 entries,
-        which just scroll here (the actual gallery still opens via clicking
-        the card itself, not from the header). */}
+        as Section 4.5. All cards are plain links now (see EXHIBIT_LINK_CASES
+        above for the 2026-08-25 gallery-overlay removal). */}
     <section id="cases-exhibit" className="flex w-full flex-col items-center gap-16 bg-black px-[6%] py-[1cm]">
       <span className="text-xs text-white/60" style={{ letterSpacing: "0.3em" }}>
         CASES
@@ -1340,15 +1293,6 @@ export default function Home() {
             label={c.label}
             image={c.image}
             href={c.href}
-            widthClass="w-[42%] lg:w-[20%]"
-          />
-        ))}
-        {EXHIBIT_GALLERY_CASES.map((c) => (
-          <CaseCard
-            key={c.key}
-            label={caseLabels[c.key][lang]}
-            image={c.image}
-            onClick={() => setOpenGallery(c.gallery)}
             widthClass="w-[42%] lg:w-[20%]"
           />
         ))}
@@ -1502,12 +1446,6 @@ export default function Home() {
     ))}
 
     <Footer />
-
-    <GalleryOverlay
-      open={openGallery !== null}
-      images={openGallery ?? []}
-      onClose={() => setOpenGallery(null)}
-    />
     </>
   );
 }
