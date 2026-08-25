@@ -887,7 +887,7 @@ export default function Home() {
           className="text-xs text-white/60 sm:text-sm"
           style={{ letterSpacing: "0.3em" }}
         >
-          CHAPTER
+          CHAPTER I
         </span>
         <h2
           className="mt-4 text-4xl leading-tight font-semibold text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] whitespace-nowrap sm:text-6xl"
@@ -1047,7 +1047,7 @@ export default function Home() {
           className="text-xs text-white/60 sm:text-sm"
           style={{ letterSpacing: "0.3em" }}
         >
-          CHAPTER
+          CHAPTER II
         </span>
         <h2
           className="mt-4 text-4xl leading-tight font-semibold text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] whitespace-nowrap sm:text-6xl"
@@ -1182,7 +1182,7 @@ export default function Home() {
           className="text-xs text-white/60 sm:text-sm"
           style={{ letterSpacing: "0.3em" }}
         >
-          CHAPTER
+          CHAPTER III
         </span>
         <h2
           className="mt-4 text-4xl leading-tight font-semibold text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] whitespace-nowrap sm:text-6xl"
@@ -1321,7 +1321,7 @@ export default function Home() {
           className="text-xs text-white/60 sm:text-sm"
           style={{ letterSpacing: "0.3em" }}
         >
-          CHAPTER
+          CHAPTER IV
         </span>
         <h2
           className="mt-4 text-4xl leading-tight font-semibold text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] whitespace-nowrap sm:text-6xl"
