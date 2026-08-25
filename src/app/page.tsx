@@ -197,12 +197,17 @@ const RESTORE_CASES = [
 // Section 7.5 case cards (same treatment as RESTORE_CASES/Section 4.5, now
 // applied to 原型展覽). Three of the five open the masonry GalleryOverlay
 // instead of linking out — same split the old exhibit MORE popup had.
-const EXHIBIT_CASES = [
-  {
-    key: "exhibit-tnhs",
-    href: "https://www.tnhs.com.tw/",
-    image: "case-exhibit-tnhs.jpg",
-  },
+//
+// Unlike RESTORE_CASES/DETAIL_CASES/DIGITAL_CASES, this chapter's cards are
+// split in two: the 3 gallery-opening ones stay hardcoded here (their
+// `gallery` arrays are dozens of local filenames — not something the
+// Internal-Pages admin's simple photo+link+label editor can manage), while
+// the plain-link one(s) now come from content/site/chapter-exhibit.json's
+// `cases[]` — same live-data-with-fallback pattern as the other three
+// chapters — so the admin can add/edit/replace them. EXHIBIT_LINK_CASES
+// below is only the fallback used until that fetch resolves (or if it's
+// ever empty).
+const EXHIBIT_GALLERY_CASES = [
   {
     key: "exhibit-ada",
     gallery: ADA_GALLERY,
@@ -221,6 +226,13 @@ const EXHIBIT_CASES = [
   // 台南建築三年展 cancelled for now — drop back in with `{ key:
   // "exhibit-triennial", href: "https://asas2026.wixsite.com/mysite/...",
   // image: "..." }` (plus a matching entry in caseLabels) if it comes back.
+];
+const EXHIBIT_LINK_CASES = [
+  {
+    key: "exhibit-tnhs",
+    href: "https://www.tnhs.com.tw/",
+    image: "case-exhibit-tnhs.jpg",
+  },
 ];
 
 // Section 5.5 case cards (same treatment as RESTORE_CASES/EXHIBIT_CASES —
@@ -335,6 +347,15 @@ export default function Home() {
           label: c.label[lang] ?? c.label["zh-Hant"],
         }))
       : DETAIL_CASES.map((c) => ({ key: c.key, image: c.image, href: c.href, label: caseLabels[c.key][lang] }));
+  const exhibitCaseItems =
+    siteContent.exhibit?.cases && siteContent.exhibit.cases.length
+      ? siteContent.exhibit.cases.map((c) => ({
+          key: c.href,
+          image: c.image,
+          href: c.href,
+          label: c.label[lang] ?? c.label["zh-Hant"],
+        }))
+      : EXHIBIT_LINK_CASES.map((c) => ({ key: c.key, image: c.image, href: c.href, label: caseLabels[c.key][lang] }));
   const digitalCaseItems =
     siteContent.digital?.cases && siteContent.digital.cases.length
       ? siteContent.digital.cases.map((c) => ({
@@ -1309,13 +1330,21 @@ export default function Home() {
         CASES
       </span>
       <div className="flex w-full flex-wrap items-start justify-center gap-x-[2%] gap-y-10">
-        {EXHIBIT_CASES.map((c) => (
+        {exhibitCaseItems.map((c) => (
+          <CaseCard
+            key={c.key}
+            label={c.label}
+            image={c.image}
+            href={c.href}
+            widthClass="w-[42%] lg:w-[20%]"
+          />
+        ))}
+        {EXHIBIT_GALLERY_CASES.map((c) => (
           <CaseCard
             key={c.key}
             label={caseLabels[c.key][lang]}
             image={c.image}
-            href={c.href}
-            onClick={c.gallery ? () => setOpenGallery(c.gallery) : undefined}
+            onClick={() => setOpenGallery(c.gallery)}
             widthClass="w-[42%] lg:w-[20%]"
           />
         ))}

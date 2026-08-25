@@ -53,6 +53,35 @@ async function fetchJson<T>(name: string): Promise<T | null> {
   }
 }
 
+export interface MaterialLink {
+  label: string;
+  href: string;
+}
+
+interface MaterialLinksContent {
+  links: MaterialLink[];
+}
+
+// Same fetch-with-fallback deal as useSiteContent, but split out on its own
+// since it's only needed by Header (the hamburger menu), not the whole
+// page — no point re-fetching all 5 chapter/declaration files just for
+// this one small list.
+export function useMaterialLinks(): MaterialLink[] | null {
+  const [links, setLinks] = useState<MaterialLink[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchJson<MaterialLinksContent>("material-links").then((data) => {
+      if (!cancelled && data?.links?.length) setLinks(data.links);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return links;
+}
+
 export function useSiteContent(): SiteContent {
   const [content, setContent] = useState<SiteContent>({
     declaration: null,

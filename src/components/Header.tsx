@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { LANGUAGES, useLanguage } from "@/lib/i18n";
 import { externalLinkProps } from "@/lib/links";
+import { useMaterialLinks } from "@/lib/useSiteContent";
 
 // Mirrors the header from the original AS studio homepage
 // (原型教學轉code/design_handoff_architecture_site/建築事務所首頁.dc.html),
@@ -15,15 +16,20 @@ import { externalLinkProps } from "@/lib/links";
 // (nav pill) groups have their own glassmorphism boxes behind them.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
+// Fallback only — this list can now be edited from the Internal-Pages
+// admin (content/site/material-links.json, via useMaterialLinks() below).
+// Kept here so the menu never blanks out on a network hiccup, and so the
+// build still has something to render before the client-side fetch
+// resolves.
 const MATERIAL_LINKS = [
   { label: "原型首頁", href: "https://www.as-structure.com/" },
   {
     label: "台南硓𥑮石．芳宅",
-    href: "https://as-studio001.github.io/Internal-Pages/",
+    href: "https://as-studio001.github.io/Internal-Pages/?case=laogu-fang",
   },
   {
     label: "嘉義實驗木場",
-    href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=582351",
+    href: "https://as-studio001.github.io/Internal-Pages/?case=chiayi-experimental-woodyard",
   },
   {
     label: "原型事務所",
@@ -47,6 +53,9 @@ export default function Header() {
   const [showMaterialMenu, setShowMaterialMenu] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const { lang, setLang } = useLanguage();
+  const liveMaterialLinks = useMaterialLinks();
+  const materialLinks =
+    liveMaterialLinks && liveMaterialLinks.length ? liveMaterialLinks : MATERIAL_LINKS;
 
   // Same click-outside-closes behavior as the original (document listener
   // checking closest("[data-menu-box]") / closest("[data-lang-menu-box]")).
@@ -92,15 +101,15 @@ export default function Header() {
                 borderColor: "oklch(0.25 0 0)",
               }}
             >
-              {MATERIAL_LINKS.map((m, i) => (
+              {materialLinks.map((m, i) => (
                 <a
-                  key={m.label}
+                  key={`${m.href}-${i}`}
                   href={m.href}
                   onClick={() => setShowMaterialMenu(false)}
                   {...externalLinkProps(m.href)}
                   className="block px-4 py-3 text-sm text-white transition-colors hover:bg-white/10"
                   style={
-                    i < MATERIAL_LINKS.length - 1
+                    i < materialLinks.length - 1
                       ? { borderBottom: "1px solid oklch(0.2 0 0)" }
                       : undefined
                   }
