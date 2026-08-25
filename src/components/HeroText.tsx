@@ -91,6 +91,43 @@ export default function HeroText({ hero }: HeroTextProps) {
   const textRef = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState(false);
   const [override, setOverride] = useState<HeroPatch>({});
+  const [visible, setVisible] = useState(false);
+
+  // Fade the hero text in over 5s instead of a hard cut-in. Skipped in the
+  // admin's preview iframe — that needs the text visible immediately so it
+  // can be dragged/scaled right away, not waiting on a fade timer.
+  //
+  // The fade only starts once the page has fully appeared — not from the
+  // moment this component mounts/hydrates, which can happen while the hero
+  // photo, fonts, etc. are still loading. window's "load" event fires only
+  // after every resource on the page has finished, so that's what starts
+  // the timer; if the page is already fully loaded by the time this effect
+  // runs (fast repeat visits), start right away instead of waiting for an
+  // event that already fired.
+  useEffect(() => {
+    if (preview) {
+      setVisible(true);
+      return;
+    }
+    let rafId: number | null = null;
+    function start() {
+      // rAF so the opacity:0 state is definitely painted at least once
+      // before flipping to 1 — otherwise the browser can coalesce both
+      // values into a single frame and skip the transition entirely.
+      rafId = requestAnimationFrame(() => setVisible(true));
+    }
+    if (document.readyState === "complete") {
+      start();
+      return () => {
+        if (rafId !== null) cancelAnimationFrame(rafId);
+      };
+    }
+    window.addEventListener("load", start, { once: true });
+    return () => {
+      window.removeEventListener("load", start);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [preview]);
 
   useEffect(() => {
     // 這個網站是靜態匯出（next.config.ts 的 output: "export"），prerender
@@ -212,6 +249,16 @@ export default function HeroText({ hero }: HeroTextProps) {
         transform: `translate(${v.offsetX}, ${v.offsetY})`,
         touchAction: preview ? "none" : undefined,
         cursor: preview ? "move" : undefined,
+        opacity: visible ? 1 : 0,
+        // Starts blurred and sharpens as it fades in, per explicit
+        // request — same 5s timing as the opacity fade below.
+        filter: visible ? "blur(0px)" : "blur(14px)",
+        // Only opacity/filter animate — leaving transform out of this
+        // keeps dragging (which sets el.style.transform imperatively, see
+        // handlePositionPointerDown) instant instead of laggy. 5s per
+        // explicit request for a slow fade, timed from window "load"
+        // above rather than from mount.
+        transition: preview ? undefined : "opacity 5s ease-out, filter 5s ease-out",
       }}
       onPointerDown={handlePositionPointerDown}
     >

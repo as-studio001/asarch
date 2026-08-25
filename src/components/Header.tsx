@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { LANGUAGES, useLanguage } from "@/lib/i18n";
 import { externalLinkProps } from "@/lib/links";
-import { useCaseLinks } from "@/lib/useSiteContent";
+import { useCaseLinks, type GroupedCaseLink } from "@/lib/useSiteContent";
 
 // Mirrors the header from the original AS studio homepage
 // (原型教學轉code/design_handoff_architecture_site/建築事務所首頁.dc.html),
@@ -26,25 +26,33 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 // it ever fails, so the menu never blanks out on a network hiccup; keep it
 // roughly in sync with reality but it doesn't need to be exact.
 const HOME_LINK = { label: "原型首頁", href: "https://www.as-structure.com/" };
-const FALLBACK_CASE_LINKS = [
+// Ordered and flagged the same way useCaseLinks() groups the live data —
+// chapter-restore's cases, then chapter-exhibit's, then chapter-detail's —
+// so the divider styling below looks right even before the live fetch
+// resolves, not just after.
+const FALLBACK_CASE_LINKS: GroupedCaseLink[] = [
   {
     label: "台南硓𥑮石．芳宅",
     href: "https://as-studio001.github.io/Internal-Pages/?case=laogu-fang",
+    isGroupStart: false,
   },
   {
     label: "嘉義實驗木場",
     href: "https://as-studio001.github.io/Internal-Pages/?case=chiayi-experimental-woodyard",
+    isGroupStart: false,
   },
   {
     label: "原型事務所",
     href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=506003",
+    isGroupStart: false,
   },
-  { label: "原型1號宅", href: "https://asstudio029.wixsite.com/ashouse1" },
+  { label: "好感空間展", href: "https://www.tnhs.com.tw/", isGroupStart: true },
+  { label: "原型1號宅", href: "https://asstudio029.wixsite.com/ashouse1", isGroupStart: true },
   {
     label: "億載金城入口意象",
     href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=609194",
+    isGroupStart: false,
   },
-  { label: "好感空間展", href: "https://www.tnhs.com.tw/" },
 ];
 
 export default function Header() {
@@ -52,8 +60,8 @@ export default function Header() {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const { lang, setLang } = useLanguage();
   const liveCaseLinks = useCaseLinks();
-  const materialLinks = [
-    HOME_LINK,
+  const materialLinks: GroupedCaseLink[] = [
+    { ...HOME_LINK, isGroupStart: false },
     ...(liveCaseLinks && liveCaseLinks.length ? liveCaseLinks : FALLBACK_CASE_LINKS),
   ];
 
@@ -101,22 +109,33 @@ export default function Header() {
                 borderColor: "oklch(0.25 0 0)",
               }}
             >
-              {materialLinks.map((m, i) => (
-                <a
-                  key={`${m.href}-${i}`}
-                  href={m.href}
-                  onClick={() => setShowMaterialMenu(false)}
-                  {...externalLinkProps(m.href)}
-                  className="block px-4 py-3 text-sm text-white transition-colors hover:bg-white/10"
-                  style={
-                    i < materialLinks.length - 1
-                      ? { borderBottom: "1px solid oklch(0.2 0 0)" }
-                      : undefined
-                  }
-                >
-                  {m.label}
-                </a>
-              ))}
+              {materialLinks.map((m, i) => {
+                const isLast = i === materialLinks.length - 1;
+                // A case right before a new chapter's group gets a
+                // thicker/brighter divider than the plain 1px line between
+                // cases of the same chapter — that's the only place this
+                // stronger line shows up, per explicit request for a
+                // clearer boundary between each chapter's own cases.
+                const nextStartsNewGroup = materialLinks[i + 1]?.isGroupStart;
+                return (
+                  <a
+                    key={`${m.href}-${i}`}
+                    href={m.href}
+                    onClick={() => setShowMaterialMenu(false)}
+                    {...externalLinkProps(m.href)}
+                    className="block px-4 py-3 text-sm text-white transition-colors hover:bg-white/10"
+                    style={
+                      isLast
+                        ? undefined
+                        : nextStartsNewGroup
+                          ? { borderBottom: "2px solid oklch(0.45 0 0)" }
+                          : { borderBottom: "1px solid oklch(0.2 0 0)" }
+                    }
+                  >
+                    {m.label}
+                  </a>
+                );
+              })}
             </div>
           )}
         </div>

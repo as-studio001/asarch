@@ -80,24 +80,66 @@ export interface CaseLink {
   href: string;
 }
 
+export interface GroupedCaseLink extends CaseLink {
+  // True when this case is the first one belonging to a chapter different
+  // from the item right before it — Header uses this to draw a divider
+  // between chapters' cases, never before the very first case overall.
+  isGroupStart: boolean;
+}
+
 interface CaseLinksContent {
   links: CaseLink[];
 }
+
+// Same 3 chapters as admin/index.html's CASE_CARD_CHAPTERS filtered to
+// hamburger:true, in the order the divider grouping below should show
+// them — 原型數位 is excluded here too (its cases don't go in the
+// hamburger menu, same as the admin side).
+const HAMBURGER_CHAPTERS = ["chapter-restore", "chapter-exhibit", "chapter-detail"];
 
 // Feeds Header's hamburger menu. Not hand-edited in the admin — Internal-
 // Pages regenerates content/site/case-links.json straight from whatever
 // cases currently exist under content/projects/ every time one is saved or
 // deleted (see admin/index.html's regenerateCaseLinksManifest()), so this
-// list always mirrors "建築案例" 1:1 with zero extra editing step. Split out
-// from useSiteContent since Header only needs this one small list, not all
-// 5 chapter/declaration files.
-export function useCaseLinks(): CaseLink[] | null {
-  const [links, setLinks] = useState<CaseLink[] | null>(null);
+// list always mirrors "建築案例" 1:1 with zero extra editing step. That file
+// itself is a flat list ordered alphabetically by project slug — it has no
+// notion of which chapter a case belongs to — so grouping-by-chapter is
+// reconstructed here by cross-referencing each of the 3 chapters' own
+// `cases` arrays (already fetched elsewhere via useSiteContent, but kept as
+// a separate small fetch here too, same reasoning as before: Header
+// shouldn't have to pull in all 5 chapter/declaration files just for this).
+export function useCaseLinks(): GroupedCaseLink[] | null {
+  const [links, setLinks] = useState<GroupedCaseLink[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetchJson<CaseLinksContent>("case-links").then((data) => {
-      if (!cancelled && data?.links?.length) setLinks(data.links);
+    Promise.all([
+      fetchJson<CaseLinksContent>("case-links"),
+      ...HAMBURGER_CHAPTERS.map((name) => fetchJson<ChapterContent>(name)),
+    ]).then(([data, ...chapters]) => {
+      if (cancelled || !data?.links?.length) return;
+      const byHref = new Map(data.links.map((l) => [l.href, l]));
+      const used = new Set<string>();
+      const result: GroupedCaseLink[] = [];
+      chapters.forEach((chapter) => {
+        let groupStarted = false;
+        (chapter?.cases || []).forEach((c) => {
+          const link = byHref.get(c.href);
+          if (!link || used.has(c.href)) return;
+          used.add(c.href);
+          result.push({ ...link, isGroupStart: result.length > 0 && !groupStarted });
+          groupStarted = true;
+        });
+      });
+      // Anything in case-links.json not accounted for by the 3 chapters
+      // above (shouldn't normally happen — that file is itself derived
+      // from these same chapters — but surface it instead of silently
+      // dropping a menu entry if the two ever fall out of sync).
+      data.links.forEach((l) => {
+        if (used.has(l.href)) return;
+        result.push({ ...l, isGroupStart: result.length > 0 });
+      });
+      setLinks(result);
     });
     return () => {
       cancelled = true;

@@ -75,8 +75,19 @@ const FLOOR_BEAM_POLYGON =
   "2808,2253 2693,2184 2588,2124";
 
 // How much extra scroll distance (in viewport heights) it takes to fully
-// reveal layers 3+4 after the hero pins in place.
-const REVEAL_VH = 1;
+// reveal layers 3+4 after the hero pins in place. Doubled per explicit
+// request ("需要滾動更多才能過渡到畫面全亮") — was 1 (one viewport height of
+// scroll to go from freshly-landed to fully lit), now takes twice as much
+// scrolling.
+const REVEAL_VH = 2;
+
+// How dark the WHOLE hero photo starts (not just the region below the
+// fade line, which the gradient below already darkens) — 0 = no extra
+// dimming, 1 = fully black. Multiplied by (1 - revealProgress) same as
+// the fade-line gradient, so it lifts together with it as the user
+// scrolls and reaches 0 once fully revealed. Per explicit request to
+// darken the initial/just-landed photo.
+const HERO_INITIAL_DARKEN = 0.5;
 
 // Section 4 thumbnail carousel — cycles through all 6 candidate photos;
 // the main photo stays fixed regardless.
@@ -637,6 +648,16 @@ export default function Home() {
           fill
           priority
           className="object-cover"
+        />
+
+        {/* Uniform dim over the ENTIRE photo (roof/beam/upper wall included
+            — the fade-line gradient below only darkens the region beneath
+            fadeLineY, so on its own the top of the photo stays fully lit
+            even on a fresh landing). Starts at HERO_INITIAL_DARKEN and
+            lifts together with the fade-line reveal as the user scrolls. */}
+        <div
+          className="pointer-events-none absolute inset-0 bg-black"
+          style={{ opacity: (1 - revealProgress) * HERO_INITIAL_DARKEN }}
         />
 
         {/* Layer 2's own boundary fade (brick -> white wall) stays at full
