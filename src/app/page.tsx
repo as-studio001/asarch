@@ -710,28 +710,61 @@ export default function Home() {
             1cm from that original spot (Y translate's "-1cm" cancelled to
             "+1cm" net, i.e. -25vh only) and sized 120% (text-4xl/6xl/7xl
             -> 2.7rem/4.5rem/5.4rem etc.), both per explicit request. */}
-        <div
-          className="absolute top-1/2 left-0 flex h-3/4 w-3/4 items-center justify-center"
-          style={{ transform: "translate(1cm, -25vh)" }}
-        >
-          <div className="text-center">
-            <h2
-              className="text-[2.7rem] font-semibold text-white sm:text-[4.5rem] lg:text-[5.4rem]"
-              style={{
-                fontFamily: "var(--font-noto-serif-tc), 'Source Han Serif TC', serif",
-                letterSpacing: "0.15em",
-              }}
+        {/* 這兩行文字（內容／粗細／大小比例／位置）從後台「主網站內容 →
+            首頁最上方文字（SECTION 1）」編輯，讀不到資料或欄位是空的都
+            退回這裡原本的預設值。底圖照片跟上面的光線遮罩效果不受影響，
+            後台故意沒開放編輯這兩個。大小比例只在不等於 1（後台改過）時
+            才用 clamp() 覆蓋 Tailwind 的響應式字級，維持沒改過時跟原本
+            像素級一致的預設效果。 */}
+        {(() => {
+          const hero = siteContent.hero;
+          const heroLine1 = hero?.line1 || "原型建築";
+          const heroLine2 = hero?.line2 || "AS.Studio";
+          const heroLine1Weight = hero?.line1Weight || "600";
+          const heroLine2Weight = hero?.line2Weight || "400";
+          const heroLine1Scale = hero?.line1Scale ?? 1;
+          const heroLine2Scale = hero?.line2Scale ?? 1;
+          const heroOffsetX = hero?.offsetX || "1cm";
+          const heroOffsetY = hero?.offsetY || "-25vh";
+          const heroLine1FontSize =
+            heroLine1Scale !== 1
+              ? `clamp(${(2.7 * heroLine1Scale).toFixed(2)}rem, ${(2.7 * heroLine1Scale).toFixed(2)}rem + 4vw, ${(5.4 * heroLine1Scale).toFixed(2)}rem)`
+              : undefined;
+          const heroLine2FontSize =
+            heroLine2Scale !== 1
+              ? `clamp(${(0.9 * heroLine2Scale).toFixed(2)}rem, ${(0.9 * heroLine2Scale).toFixed(2)}rem + 1.2vw, ${(1.2 * heroLine2Scale).toFixed(2)}rem)`
+              : undefined;
+          return (
+            <div
+              className="absolute top-1/2 left-0 flex h-3/4 w-3/4 items-center justify-center"
+              style={{ transform: `translate(${heroOffsetX}, ${heroOffsetY})` }}
             >
-              原型建築
-            </h2>
-            <p
-              className="mt-5 text-[0.9rem] text-white/60 sm:text-[1.2rem]"
-              style={{ letterSpacing: "0.3em" }}
-            >
-              AS.Studio
-            </p>
-          </div>
-        </div>
+              <div className="text-center">
+                <h2
+                  className="text-[2.7rem] text-white sm:text-[4.5rem] lg:text-[5.4rem]"
+                  style={{
+                    fontFamily: "var(--font-noto-serif-tc), 'Source Han Serif TC', serif",
+                    letterSpacing: "0.15em",
+                    fontWeight: heroLine1Weight,
+                    ...(heroLine1FontSize ? { fontSize: heroLine1FontSize } : {}),
+                  }}
+                >
+                  {heroLine1}
+                </h2>
+                <p
+                  className="mt-5 text-[0.9rem] text-white/60 sm:text-[1.2rem]"
+                  style={{
+                    letterSpacing: "0.3em",
+                    fontWeight: heroLine2Weight,
+                    ...(heroLine2FontSize ? { fontSize: heroLine2FontSize } : {}),
+                  }}
+                >
+                  {heroLine2}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Bottom-edge vignette — fades the last 4cm of the screen to
             black, independent of scroll, sitting above everything else

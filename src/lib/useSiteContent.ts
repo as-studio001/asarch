@@ -35,7 +35,24 @@ export interface DeclarationContent {
   paragraphs: Lang5[];
 }
 
+// SECTION 1（首頁最上方全螢幕大圖）疊在照片上的兩行文字設定——底圖跟
+// 光線遮罩效果本身不在這份內容裡，是版型固定的，後台也刻意不開放編輯，
+// 只有這兩行文字的內容/粗細/大小比例/位置會經由這裡覆蓋 page.tsx 原本
+// 寫死的預設值。所有欄位都是選填：後台的 hero.json 讀不到，或某個欄位
+// 是空的，page.tsx 都會退回原本寫死的預設，不會讓這個區塊跑版或空白。
+export interface HeroContent {
+  line1?: string;
+  line1Weight?: string;
+  line1Scale?: number;
+  line2?: string;
+  line2Weight?: string;
+  line2Scale?: number;
+  offsetX?: string;
+  offsetY?: string;
+}
+
 export interface SiteContent {
+  hero: HeroContent | null;
   declaration: DeclarationContent | null;
   restore: ChapterContent | null;
   detail: ChapterContent | null;
@@ -127,6 +144,7 @@ export function useExtraChapters(): ExtraChapter[] {
 
 export function useSiteContent(): SiteContent {
   const [content, setContent] = useState<SiteContent>({
+    hero: null,
     declaration: null,
     restore: null,
     detail: null,
@@ -137,14 +155,15 @@ export function useSiteContent(): SiteContent {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
+      fetchJson<HeroContent>("hero"),
       fetchJson<DeclarationContent>("declaration"),
       fetchJson<ChapterContent>("chapter-restore"),
       fetchJson<ChapterContent>("chapter-detail"),
       fetchJson<ChapterContent>("chapter-exhibit"),
       fetchJson<ChapterContent>("chapter-digital"),
-    ]).then(([declaration, restore, detail, exhibit, digital]) => {
+    ]).then(([hero, declaration, restore, detail, exhibit, digital]) => {
       if (cancelled) return;
-      setContent({ declaration, restore, detail, exhibit, digital });
+      setContent({ hero, declaration, restore, detail, exhibit, digital });
     });
     return () => {
       cancelled = true;
