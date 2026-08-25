@@ -53,25 +53,28 @@ async function fetchJson<T>(name: string): Promise<T | null> {
   }
 }
 
-export interface MaterialLink {
+export interface CaseLink {
   label: string;
   href: string;
 }
 
-interface MaterialLinksContent {
-  links: MaterialLink[];
+interface CaseLinksContent {
+  links: CaseLink[];
 }
 
-// Same fetch-with-fallback deal as useSiteContent, but split out on its own
-// since it's only needed by Header (the hamburger menu), not the whole
-// page — no point re-fetching all 5 chapter/declaration files just for
-// this one small list.
-export function useMaterialLinks(): MaterialLink[] | null {
-  const [links, setLinks] = useState<MaterialLink[] | null>(null);
+// Feeds Header's hamburger menu. Not hand-edited in the admin — Internal-
+// Pages regenerates content/site/case-links.json straight from whatever
+// cases currently exist under content/projects/ every time one is saved or
+// deleted (see admin/index.html's regenerateCaseLinksManifest()), so this
+// list always mirrors "建築案例" 1:1 with zero extra editing step. Split out
+// from useSiteContent since Header only needs this one small list, not all
+// 5 chapter/declaration files.
+export function useCaseLinks(): CaseLink[] | null {
+  const [links, setLinks] = useState<CaseLink[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetchJson<MaterialLinksContent>("material-links").then((data) => {
+    fetchJson<CaseLinksContent>("case-links").then((data) => {
       if (!cancelled && data?.links?.length) setLinks(data.links);
     });
     return () => {
