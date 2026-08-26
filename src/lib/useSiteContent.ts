@@ -75,6 +75,40 @@ async function fetchJson<T>(name: string): Promise<T | null> {
   }
 }
 
+// heroPhoto/mainPhoto/thumbnails (and the hamburger menu's case thumbnails)
+// are all full Internal-Pages image URLs. On first paint every one of these
+// still shows this repo's own hardcoded /photos/ fallback (see chapterImg()
+// in page.tsx) so the homepage is never blank; once this hook's fetch
+// resolves, every one of those images gets swapped to the fetched URL —
+// which means re-downloading the same photo a second time from scratch.
+// Caching the last-fetched result in sessionStorage lets a repeat visit
+// (reload, back button, another tab in the same session) start from the
+// real CMS content immediately, before the network round trip even
+// finishes — the <Image> never renders the local fallback in the first
+// place, so there's nothing to swap and nothing to re-download.
+function cacheKeyFor(name: string) {
+  return `asarch-site-content:${name}`;
+}
+
+function readCache<T>(name: string): T | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(cacheKeyFor(name));
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache<T>(name: string, data: T | null) {
+  if (typeof window === "undefined" || data == null) return;
+  try {
+    window.sessionStorage.setItem(cacheKeyFor(name), JSON.stringify(data));
+  } catch {
+    /* storage full/blocked — caching is a nice-to-have, not fatal */
+  }
+}
+
 export interface CaseLink {
   label: string;
   href: string;
@@ -226,6 +260,8 @@ export function useSiteContent(): SiteContent {
 
   useEffect(() => {
     let cancelled = false;
+    const cached = readCache<SiteContent>("all-chapters");
+    if (cached) setContent(cached);
     Promise.all([
       fetchJson<HeroContent>("hero"),
       fetchJson<DeclarationContent>("declaration"),
@@ -235,7 +271,9 @@ export function useSiteContent(): SiteContent {
       fetchJson<ChapterContent>("chapter-digital"),
     ]).then(([hero, declaration, restore, detail, exhibit, digital]) => {
       if (cancelled) return;
-      setContent({ hero, declaration, restore, detail, exhibit, digital });
+      const next = { hero, declaration, restore, detail, exhibit, digital };
+      setContent(next);
+      writeCache("all-chapters", next);
     });
     return () => {
       cancelled = true;
