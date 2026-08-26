@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { HeroContent } from "@/lib/useSiteContent";
+import { useLanguage, type LangCode } from "@/lib/i18n";
+import { heroLine1 } from "@/content/translations";
 
 interface HeroTextProps {
   hero: HeroContent | null;
@@ -10,7 +12,9 @@ interface HeroTextProps {
 
 // 完全對應「改成後台可視覺化編輯」之前，這裡原本寫死的樣式——後台
 // hero.json 讀不到、或某個欄位缺漏，都退回這裡，維持首頁大圖區塊
-// 原本的預設外觀，不會空白或跑版。
+// 原本的預設外觀，不會空白或跑版。line1 這個預設值本身不是固定的——見
+// mergeHero() 怎麼用 heroLine1[lang] 取代它，只有在那個查表也失敗時
+// （理論上不會發生，heroLine1 五語言都有定義）才會真的用到這裡的中文。
 const DEFAULTS = {
   line1: "原型建築",
   line1Weight: "600",
@@ -39,8 +43,19 @@ type HeroValues = {
 
 type HeroPatch = Partial<HeroValues>;
 
-function mergeHero(hero: HeroContent | null, override: HeroPatch): HeroValues {
-  const base = { ...DEFAULTS } as HeroValues;
+// line1 ("原型建築") translates per language when the admin hasn't set a
+// custom hero.line1 — line2 ("AS.Studio") is a fixed brand wordmark, kept
+// identical across all languages on purpose (same convention as
+// manifestoMotto's English line, never translated). A CMS-set hero.line1
+// override, once present, is a single string with no per-language field of
+// its own in Internal-Pages' current admin, so it stays fixed across
+// languages too rather than silently reverting to the localized default in
+// 4 of 5 languages.
+function mergeHero(hero: HeroContent | null, override: HeroPatch, lang: LangCode): HeroValues {
+  const base = {
+    ...DEFAULTS,
+    line1: heroLine1[lang] ?? heroLine1["zh-Hant"] ?? DEFAULTS.line1,
+  } as HeroValues;
   const layer = (source: HeroPatch | HeroContent | null) => {
     if (!source) return;
     (Object.keys(base) as (keyof HeroValues)[]).forEach((key) => {
@@ -87,44 +102,46 @@ const MAX_SCALE = 3;
 //    ed.item，後台按下「儲存並發布」才會真的寫進 hero.json——這個
 //    元件本身完全不知道怎麼寫 GitHub。
 export default function HeroText({ hero }: HeroTextProps) {
+  const { lang } = useLanguage();
   const wrapRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState(false);
   const [override, setOverride] = useState<HeroPatch>({});
   const [visible, setVisible] = useState(false);
 
-  // Fade the hero text in over 5s instead of a hard cut-in. Skipped in the
+  // Fade the hero text in over 3s instead of a hard cut-in. Skipped in the
   // admin's preview iframe — that needs the text visible immediately so it
   // can be dragged/scaled right away, not waiting on a fade timer.
   //
-  // The fade only starts once the page has fully appeared — not from the
-  // moment this component mounts/hydrates, which can happen while the hero
-  // photo, fonts, etc. are still loading. window's "load" event fires only
-  // after every resource on the page has finished, so that's what starts
-  // the timer; if the page is already fully loaded by the time this effect
-  // runs (fast repeat visits), start right away instead of waiting for an
-  // event that already fired.
+  // Trigger, per explicit request: not on load itself, but on the user's
+  // FIRST scroll after the page has fully appeared. window's "load" event
+  // (fires only once every resource has finished) first arms a one-time
+  // scroll listener; if the page is already fully loaded by the time this
+  // effect runs (fast repeat visits), arm it right away instead of waiting
+  // for a "load" event that already fired.
   useEffect(() => {
     if (preview) {
       setVisible(true);
       return;
     }
     let rafId: number | null = null;
-    function start() {
-      // rAF so the opacity:0 state is definitely painted at least once
-      // before flipping to 1 — otherwise the browser can coalesce both
+    function onFirstScroll() {
+      // rAF so the opacity:0/blurred state is definitely painted at least
+      // once before flipping — otherwise the browser can coalesce both
       // values into a single frame and skip the transition entirely.
       rafId = requestAnimationFrame(() => setVisible(true));
     }
-    if (document.readyState === "complete") {
-      start();
-      return () => {
-        if (rafId !== null) cancelAnimationFrame(rafId);
-      };
+    function armScrollTrigger() {
+      window.addEventListener("scroll", onFirstScroll, { once: true, passive: true });
     }
-    window.addEventListener("load", start, { once: true });
+    if (document.readyState === "complete") {
+      armScrollTrigger();
+    } else {
+      window.addEventListener("load", armScrollTrigger, { once: true });
+    }
     return () => {
-      window.removeEventListener("load", start);
+      window.removeEventListener("load", armScrollTrigger);
+      window.removeEventListener("scroll", onFirstScroll);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, [preview]);
@@ -173,7 +190,7 @@ export default function HeroText({ hero }: HeroTextProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [preview]);
 
-  const v = mergeHero(hero, override);
+  const v = mergeHero(hero, override, lang);
 
   function handlePositionPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (!preview || !wrapRef.current) return;
@@ -251,14 +268,14 @@ export default function HeroText({ hero }: HeroTextProps) {
         cursor: preview ? "move" : undefined,
         opacity: visible ? 1 : 0,
         // Starts blurred and sharpens as it fades in, per explicit
-        // request — same 5s timing as the opacity fade below.
+        // request — same 1.5s timing as the opacity fade below.
         filter: visible ? "blur(0px)" : "blur(14px)",
         // Only opacity/filter animate — leaving transform out of this
         // keeps dragging (which sets el.style.transform imperatively, see
-        // handlePositionPointerDown) instant instead of laggy. 5s per
-        // explicit request for a slow fade, timed from window "load"
-        // above rather than from mount.
-        transition: preview ? undefined : "opacity 5s ease-out, filter 5s ease-out",
+        // handlePositionPointerDown) instant instead of laggy. 1.5s per
+        // explicit request, triggered by the first scroll above rather
+        // than by window "load" itself.
+        transition: preview ? undefined : "opacity 1.5s ease-out, filter 1.5s ease-out",
       }}
       onPointerDown={handlePositionPointerDown}
     >

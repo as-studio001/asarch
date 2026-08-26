@@ -18,12 +18,14 @@ import {
   chapter01Title,
   chapter02Title,
   chapter03Title,
+  chapter04Title,
   restoreSliderLabel,
   detailSliderLabel,
   exhibitSliderLabel,
   restoreDescription,
   detailDescription,
   exhibitDescription,
+  digitalDescription,
   caseLabels,
 } from "@/content/translations";
 
@@ -309,9 +311,17 @@ export default function Home() {
   const restoreDesc = siteContent.restore?.description?.[lang] ?? restoreDescription[lang];
   const detailDesc = siteContent.detail?.description?.[lang] ?? detailDescription[lang];
   const exhibitDesc = siteContent.exhibit?.description?.[lang] ?? exhibitDescription[lang];
-  const digitalDesc =
-    siteContent.digital?.description?.[lang] ??
-    "原型數位不是單純用數位工具，而是重新思考建築如何進入數位時代。從 BIM、參數化設計、AI、數位製造到資訊整合，我們將技術轉化為設計思考與工作方法。數位不是取代人的創意，而是讓想法更快被驗證、更精準地被實現。從設計圖面到資料庫、從模型到現場，我們全面使用Archicad、Rhino 試圖讓圖說與設計無縫接軌、甚至讓結構也同時一併完成。";
+  const digitalDesc = siteContent.digital?.description?.[lang] ?? digitalDescription[lang];
+  // Chapter banner titles (the big h2 next to "CHAPTER I/II/III/IV") — CMS-
+  // aware the same way the descriptions above are, so editing a chapter's
+  // title in Internal-Pages' admin actually takes effect (previously these
+  // read straight from the hardcoded translations, ignoring siteContent
+  // entirely; 原型數位's was a bare untranslated literal with no lang
+  // lookup or CMS lookup at all).
+  const restoreTitle = siteContent.restore?.title?.[lang] ?? chapter01Title[lang];
+  const detailTitle = siteContent.detail?.title?.[lang] ?? chapter02Title[lang];
+  const exhibitTitle = siteContent.exhibit?.title?.[lang] ?? chapter03Title[lang];
+  const digitalTitle = siteContent.digital?.title?.[lang] ?? chapter04Title[lang];
   const restoreCaseItems =
     siteContent.restore?.cases && siteContent.restore.cases.length
       ? siteContent.restore.cases.map((c) => ({
@@ -917,7 +927,7 @@ export default function Home() {
             letterSpacing: "0.15em",
           }}
         >
-          {chapter01Title[lang]}
+          {restoreTitle}
         </h2>
       </div>
     </section>
@@ -1077,7 +1087,7 @@ export default function Home() {
             letterSpacing: "0.15em",
           }}
         >
-          {chapter02Title[lang]}
+          {detailTitle}
         </h2>
       </div>
     </section>
@@ -1212,7 +1222,7 @@ export default function Home() {
             letterSpacing: "0.15em",
           }}
         >
-          {chapter03Title[lang]}
+          {exhibitTitle}
         </h2>
       </div>
     </section>
@@ -1351,7 +1361,7 @@ export default function Home() {
             letterSpacing: "0.15em",
           }}
         >
-          原型數位
+          {digitalTitle}
         </h2>
       </div>
     </section>

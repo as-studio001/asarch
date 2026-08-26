@@ -80,6 +80,17 @@ export const chapter03Title: Localized = {
   ko: "프로토타입 전시",
 };
 
+// Matches the "title" field already live in Internal-Pages'
+// content/site/chapter-digital.json, used as the local fallback the same
+// way chapter01-03Title are — CMS-aware lookup happens in page.tsx.
+export const chapter04Title: Localized = {
+  "zh-Hant": "原型數位",
+  "zh-Hans": "原型数位",
+  en: "Digital",
+  ja: "プロトタイプデジタル",
+  ko: "프로토타입 디지털",
+};
+
 // Slider headings (e.g. "原型修復｜Restoration") already mix Chinese and
 // English by design, so only the Chinese half gets translated — and for the
 // "en" language specifically, per explicit request, the Chinese half stays
@@ -147,6 +158,24 @@ export const exhibitDescription: Localized = {
     "展覧会とは、建築が建物を離れたのちに、より多くの人々と対話する方法であり、境界のない場でもあります。プロトタイプ展覧会は、建築・構造・素材・研究を、見て、理解し、参加できるコンテンツへと変換します。完成した作品だけでなく、デザインがどう生まれ、課題がどう解決されたかも示します。展覧会・出版・講演・模型・空間実験を通じて専門知識を公共の言葉に翻訳し、建築が語られ、理解され、次のデザインのプロトタイプとなることを目指します。",
   ko:
     "전시는 건축이 건물을 떠난 뒤, 더 많은 사람들과 대화하는 방법이자 경계 없는 영역이 되기도 합니다. 프로토타입 전시는 건축, 구조, 재료, 연구를 보고 이해하고 참여할 수 있는 콘텐츠로 전환합니다. 완성된 작품뿐 아니라 디자인이 어떻게 일어나고 문제가 어떻게 해결되는지도 보여줍니다. 전시, 출판, 강연, 모형, 공간 실험을 통해 전문 지식을 공공의 언어로 바꾸어, 건축이 논의되고 이해되며 다음 디자인의 프로토타입이 되도록 합니다.",
+};
+
+// Matches the "description" field already live in Internal-Pages'
+// content/site/chapter-digital.json verbatim (zh-Hant through ko), used as
+// the local fallback the same way restore/detail/exhibitDescription are —
+// page.tsx previously had only the zh-Hant sentence hardcoded inline with
+// no other-language fallback at all.
+export const digitalDescription: Localized = {
+  "zh-Hant":
+    "原型數位不是單純用數位工具，而是重新思考建築如何進入數位時代。從 BIM、參數化設計、AI、數位製造到資訊整合，我們將技術轉化為設計思考與工作方法。數位不是取代人的創意，而是讓想法更快被驗證、更精準地被實現。從設計圖面到資料庫、從模型到現場，我們全面使用Archicad、Rhino 試圖讓圖說與設計無縫接軌、甚至讓結構也同時一併完成。",
+  "zh-Hans":
+    "原型数位不是单纯用数位工具，而是重新思考建筑如何进入数位时代。从 BIM、参数化设计、AI、数位制造到信息整合，我们将技术转化为设计思考与工作方法。数位不是取代人的创意，而是让想法更快被验证、更精准地被实现。从设计图面到数据库、从模型到现场，我们全面使用Archicad、Rhino 试图让图说与设计无缝接轨、甚至让结构也同时一并完成。",
+  en:
+    "Prototype Digital isn't simply using digital tools — it's rethinking how architecture enters the digital age. From BIM, parametric design, and AI to digital fabrication and information integration, we turn technology into design thinking and working method. Digital doesn't replace human creativity; it lets ideas be verified faster and realized more precisely. From drawings to databases, from models to the site, we use Archicad and Rhino throughout, aiming for drawings and design to connect seamlessly, with structure completed alongside.",
+  ja:
+    "プロトタイプデジタルとは、単にデジタルツールを使うことではなく、建築がどのようにデジタル時代に入っていくかを見つめ直すことです。BIM、パラメトリックデザイン、AI、デジタルファブリケーションから情報統合まで、私たちは技術をデザイン思考と仕事の方法へと転化します。デジタルは人の創造性を置き換えるものではなく、アイデアをより速く検証し、より精密に実現するためのものです。図面からデータベースへ、模型から現場へ、私たちはArchicad・Rhinoを全面的に使用し、図面と設計をシームレスに連携させ、構造も同時に完成させることを目指します。",
+  ko:
+    "프로토타입 디지털은 단순히 디지털 도구를 사용하는 것이 아니라, 건축이 디지털 시대에 어떻게 진입할지를 다시 생각하는 것입니다. BIM, 파라메트릭 디자인, AI, 디지털 제작에서 정보 통합에 이르기까지, 우리는 기술을 디자인 사고와 작업 방식으로 전환합니다. 디지털은 사람의 창의성을 대체하는 것이 아니라, 아이디어가 더 빠르게 검증되고 더 정밀하게 구현되도록 합니다. 도면에서 데이터베이스까지, 모형에서 현장까지, 우리는 Archicad와 Rhino를 전면적으로 사용하여 도면과 설계가 매끄럽게 이어지고 구조까지 동시에 완성되도록 합니다.",
 };
 
 // Labels for the CASES-band cards (RESTORE_CASES/DETAIL_CASES/EXHIBIT_CASES
@@ -256,4 +285,28 @@ export const caseLabels: Record<string, Localized> = {
     ja: "台南珊瑚礁石・芳邸",
     ko: "타이난 산호석・팡 주택",
   },
+};
+
+// Header's hamburger-menu "原型首頁" entry — the one fixed nav-back-to-
+// main-site link at the top of that menu, not a case.
+export const hamburgerHomeLabel: Localized = {
+  "zh-Hant": "原型首頁",
+  "zh-Hans": "原型首页",
+  en: "Home",
+  ja: "ホーム",
+  ko: "홈",
+};
+
+// SECTION 1 (首頁最上方全螢幕大圖) 疊在照片上的那兩行文字 — 只翻譯
+// line1（原型建築 studio 名稱本身）；line2「AS.Studio」是品牌字標，跟
+// manifestoMotto 的英文格言一樣，刻意在所有語言下維持原樣不翻譯。這兩個
+// 只是後台沒有自訂 hero.json 內容時的「預設值」，HeroText.tsx 讀不到
+// hero.line1 才會用這裡的翻譯；後台一旦透過視覺化編輯器存過自訂文字，
+// 那份文字目前的架構只有單一語言欄位，會固定顯示、不會跟著切換語言。
+export const heroLine1: Localized = {
+  "zh-Hant": "原型建築",
+  "zh-Hans": "原型建筑",
+  en: "Prototype Architecture",
+  ja: "プロトタイプ建築",
+  ko: "프로토타입 건축",
 };

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { LANGUAGES, useLanguage } from "@/lib/i18n";
 import { externalLinkProps } from "@/lib/links";
 import { useCaseLinks, type GroupedCaseLink } from "@/lib/useSiteContent";
+import { hamburgerHomeLabel, caseLabels } from "@/content/translations";
 
 // Mirrors the header from the original AS studio homepage
 // (原型教學轉code/design_handoff_architecture_site/建築事務所首頁.dc.html),
@@ -25,33 +26,49 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 // menu. FALLBACK_CASE_LINKS is only used before that fetch resolves or if
 // it ever fails, so the menu never blanks out on a network hiccup; keep it
 // roughly in sync with reality but it doesn't need to be exact.
-const HOME_LINK = { label: "原型首頁", href: "https://www.as-structure.com/" };
+const HOME_LINK = { label: hamburgerHomeLabel, href: "https://www.as-structure.com/" };
 // Ordered and flagged the same way useCaseLinks() groups the live data —
 // chapter-restore's cases, then chapter-exhibit's, then chapter-detail's —
 // so the divider styling below looks right even before the live fetch
-// resolves, not just after.
+// resolves, not just after. Labels reuse the exact same caseLabels entries
+// as the CASES-band cards for these same 6 cases (see translations.ts), so
+// they're already fully localized rather than fixed Chinese.
 const FALLBACK_CASE_LINKS: GroupedCaseLink[] = [
   {
-    label: "台南硓𥑮石．芳宅",
+    label: caseLabels["restore-xinyi"],
     href: "https://as-studio001.github.io/Internal-Pages/?case=laogu-fang",
     isGroupStart: false,
+    chNumber: "CH 1.1",
   },
   {
-    label: "嘉義實驗木場",
+    label: caseLabels["restore-woodyard"],
     href: "https://as-studio001.github.io/Internal-Pages/?case=chiayi-experimental-woodyard",
     isGroupStart: false,
+    chNumber: "CH 1.2",
   },
   {
-    label: "原型事務所",
+    label: caseLabels["restore-office"],
     href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=506003",
     isGroupStart: false,
+    chNumber: "CH 1.3",
   },
-  { label: "好感空間展", href: "https://www.tnhs.com.tw/", isGroupStart: true },
-  { label: "原型1號宅", href: "https://asstudio029.wixsite.com/ashouse1", isGroupStart: true },
   {
-    label: "億載金城入口意象",
+    label: caseLabels["exhibit-tnhs"],
+    href: "https://www.tnhs.com.tw/",
+    isGroupStart: true,
+    chNumber: "CH 2.1",
+  },
+  {
+    label: caseLabels["detail-proto1"],
+    href: "https://asstudio029.wixsite.com/ashouse1",
+    isGroupStart: true,
+    chNumber: "CH 3.1",
+  },
+  {
+    label: caseLabels["detail-yizai"],
     href: "https://www.mashup.com.tw/as%20studio/?page=product_shop&p_id=609194",
     isGroupStart: false,
+    chNumber: "CH 3.2",
   },
 ];
 
@@ -103,7 +120,13 @@ export default function Header() {
           {showMaterialMenu && (
             <div
               data-menu-box
-              className="absolute top-full left-0 mt-2 w-40 overflow-hidden rounded-lg border shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
+              // w-max (not a fixed w-40 like before) — the box always
+              // sizes itself to whatever its widest current row actually
+              // needs, so no label (in any language, current or future
+              // case) can ever wrap, per explicit request. min-w-40 keeps
+              // it from looking cramped when every label happens to be
+              // short.
+              className="absolute top-full left-0 mt-2 w-max min-w-40 overflow-hidden rounded-lg border shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
               style={{
                 backgroundColor: "oklch(0.12 0 0)",
                 borderColor: "oklch(0.25 0 0)",
@@ -112,10 +135,12 @@ export default function Header() {
               {materialLinks.map((m, i) => {
                 const isLast = i === materialLinks.length - 1;
                 // A case right before a new chapter's group gets a
-                // thicker/brighter divider than the plain 1px line between
-                // cases of the same chapter — that's the only place this
+                // brighter divider than the plain 1px line between cases
+                // of the same chapter — that's the only place this
                 // stronger line shows up, per explicit request for a
                 // clearer boundary between each chapter's own cases.
+                // Thickness halved (was 2px) per follow-up request — still
+                // distinguished from the regular 1px line by color alone.
                 const nextStartsNewGroup = materialLinks[i + 1]?.isGroupStart;
                 return (
                   <a
@@ -123,16 +148,30 @@ export default function Header() {
                     href={m.href}
                     onClick={() => setShowMaterialMenu(false)}
                     {...externalLinkProps(m.href)}
-                    className="block px-4 py-3 text-sm text-white transition-colors hover:bg-white/10"
+                    // whitespace-nowrap — paired with the container's
+                    // w-max above, this is what actually guarantees no
+                    // wrapping: forces this row's own content onto one
+                    // line, which is what forces the container to grow
+                    // wide enough to fit it instead of wrapping.
+                    className="block px-4 py-3 text-sm whitespace-nowrap text-white transition-colors hover:bg-white/10"
                     style={
                       isLast
                         ? undefined
                         : nextStartsNewGroup
-                          ? { borderBottom: "2px solid oklch(0.45 0 0)" }
+                          ? { borderBottom: "1px solid oklch(0.45 0 0)" }
                           : { borderBottom: "1px solid oklch(0.2 0 0)" }
                     }
                   >
-                    {m.label}
+                    {/* Thin grey "CH {chapter}.{item}" tag ahead of the
+                        label — only cases have one (HOME_LINK and any
+                        case-links.json entry that couldn't be matched to a
+                        chapter don't), per explicit request. */}
+                    {m.chNumber && (
+                      <span className="mr-2 text-[11px] font-light text-white/40">
+                        {m.chNumber}
+                      </span>
+                    )}
+                    {m.label[lang] ?? m.label["zh-Hant"]}
                   </a>
                 );
               })}

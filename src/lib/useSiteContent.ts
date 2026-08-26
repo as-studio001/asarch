@@ -80,11 +80,22 @@ export interface CaseLink {
   href: string;
 }
 
-export interface GroupedCaseLink extends CaseLink {
+export interface GroupedCaseLink {
+  href: string;
+  // Full Lang5 label, not the flat single-language string case-links.json
+  // itself carries — see the comment on useCaseLinks() below for where
+  // this actually comes from.
+  label: Lang5;
   // True when this case is the first one belonging to a chapter different
   // from the item right before it — Header uses this to draw a divider
   // between chapters' cases, never before the very first case overall.
   isGroupStart: boolean;
+  // "CH {chapter}.{item}" — chapter is 1-indexed position within
+  // HAMBURGER_CHAPTERS, item is 1-indexed position within that chapter's
+  // own group of cases. Undefined for a case-links.json entry that
+  // couldn't be matched to any of the 3 chapters (see the fallback loop
+  // below) — there's no chapter number to show for those.
+  chNumber?: string;
 }
 
 interface CaseLinksContent {
@@ -102,12 +113,17 @@ const HAMBURGER_CHAPTERS = ["chapter-restore", "chapter-exhibit", "chapter-detai
 // cases currently exist under content/projects/ every time one is saved or
 // deleted (see admin/index.html's regenerateCaseLinksManifest()), so this
 // list always mirrors "建築案例" 1:1 with zero extra editing step. That file
-// itself is a flat list ordered alphabetically by project slug — it has no
-// notion of which chapter a case belongs to — so grouping-by-chapter is
+// itself is a flat list ordered alphabetically by project slug, each entry
+// carrying only a single-language `label` string — it has no notion of
+// which chapter a case belongs to, and no per-language text. Both are
 // reconstructed here by cross-referencing each of the 3 chapters' own
 // `cases` arrays (already fetched elsewhere via useSiteContent, but kept as
 // a separate small fetch here too, same reasoning as before: Header
-// shouldn't have to pull in all 5 chapter/declaration files just for this).
+// shouldn't have to pull in all 5 chapter/declaration files just for this)
+// — those DO carry a full Lang5 `label` per case, which is what actually
+// gets used; case-links.json's own flat label is only a membership/matching
+// key, and a last-resort display fallback for an entry that isn't in any
+// of the 3 chapters (see the loop after this one).
 export function useCaseLinks(): GroupedCaseLink[] | null {
   const [links, setLinks] = useState<GroupedCaseLink[] | null>(null);
 
@@ -121,23 +137,32 @@ export function useCaseLinks(): GroupedCaseLink[] | null {
       const byHref = new Map(data.links.map((l) => [l.href, l]));
       const used = new Set<string>();
       const result: GroupedCaseLink[] = [];
-      chapters.forEach((chapter) => {
+      chapters.forEach((chapter, chapterIdx) => {
         let groupStarted = false;
+        let itemIdx = 0;
         (chapter?.cases || []).forEach((c) => {
-          const link = byHref.get(c.href);
-          if (!link || used.has(c.href)) return;
+          if (!byHref.has(c.href) || used.has(c.href)) return;
           used.add(c.href);
-          result.push({ ...link, isGroupStart: result.length > 0 && !groupStarted });
+          itemIdx += 1;
+          result.push({
+            href: c.href,
+            label: c.label,
+            isGroupStart: result.length > 0 && !groupStarted,
+            chNumber: `CH ${chapterIdx + 1}.${itemIdx}`,
+          });
           groupStarted = true;
         });
       });
       // Anything in case-links.json not accounted for by the 3 chapters
       // above (shouldn't normally happen — that file is itself derived
       // from these same chapters — but surface it instead of silently
-      // dropping a menu entry if the two ever fall out of sync).
+      // dropping a menu entry if the two ever fall out of sync). No Lang5
+      // data available for these, so the same flat string repeats across
+      // every language rather than leaving some languages blank.
       data.links.forEach((l) => {
         if (used.has(l.href)) return;
-        result.push({ ...l, isGroupStart: result.length > 0 });
+        const flat: Lang5 = { "zh-Hant": l.label, "zh-Hans": l.label, en: l.label, ja: l.label, ko: l.label };
+        result.push({ href: l.href, label: flat, isGroupStart: result.length > 0 });
       });
       setLinks(result);
     });
