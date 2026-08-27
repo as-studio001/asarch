@@ -24,8 +24,8 @@ const PRELOAD_PHOTOS = [
   "restore-thumb-6.jpg",
   "restore-thumb-7.jpg",
   "restore-thumb-8.jpg",
-  "case-restore-xinyi.jpg",
-  "case-restore-woodyard.jpg",
+ // "case-restore-xinyi.jpg",
+ // "case-restore-woodyard.jpg",
   "case-restore-office.jpg",
   "chapter02.jpg",
   "detail-main.jpg",
@@ -53,9 +53,9 @@ const PRELOAD_PHOTOS = [
   "exhibit-thumb-7.jpg",
   "exhibit-thumb-8.jpg",
   "case-exhibit-tnhs.jpg",
-  "gallery-ada-1.jpg",
+ // "gallery-ada-1.jpg",
   "case-exhibit-bamboo.jpg",
-  "gallery-taipei-1.jpg",
+ // "gallery-taipei-1.jpg",
 ];
 
 // Full-screen loading gate wrapping the whole site: the intro video loops
