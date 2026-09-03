@@ -140,7 +140,7 @@ interface CaseLinksContent {
 // hamburger:true, in the order the divider grouping below should show
 // them — 原型數位 is excluded here too (its cases don't go in the
 // hamburger menu, same as the admin side).
-const HAMBURGER_CHAPTERS = ["chapter-restore", "chapter-exhibit", "chapter-detail"];
+const HAMBURGER_CHAPTERS = ["chapter-restore", "chapter-exhibit", "chapter-detail", "chapter-digital"];
 
 // Feeds Header's hamburger menu. Not hand-edited in the admin — Internal-
 // Pages regenerates content/site/case-links.json straight from whatever
