@@ -34,6 +34,7 @@ export default function CaseCard({
           src={src}
           alt={label}
           fill
+          loading="lazy"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
