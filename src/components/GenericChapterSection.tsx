@@ -42,7 +42,7 @@ export default function GenericChapterSection({ content }: { content: ChapterCon
 
       {content.heroPhoto ? (
         <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16 / 9" }}>
-          <Image src={content.heroPhoto} alt={title} fill className="object-cover" />
+          <Image src={content.heroPhoto} alt={title} fill priority={false} loading="lazy" className="object-cover" /> //加入懶載入，加速初次載入速度
         </div>
       ) : null}
 
@@ -50,7 +50,7 @@ export default function GenericChapterSection({ content }: { content: ChapterCon
         <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {thumbnails.map((src, i) => (
             <div key={src + i} className="relative overflow-hidden" style={{ aspectRatio: "4 / 3" }}>
-              <Image src={src} alt={`${title} ${i + 1}`} fill className="object-cover" />
+              <Image src={src} alt={`${title} ${i + 1}`} fill loading="lazy" className="object-cover" />
             </div>
           ))}
         </div>
