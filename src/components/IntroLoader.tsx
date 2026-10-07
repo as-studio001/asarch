@@ -79,7 +79,7 @@ export default function IntroLoader({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [hidden, setHidden] = useState(false);
 
-  /*useEffect(() => {
+  useEffect(() => {
     if (PRELOAD_PHOTOS.length === 0) {
       setReady(true);
       return;
@@ -99,9 +99,6 @@ export default function IntroLoader({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);*/
-  useEffect(() => {
-    setReady(true);
   }, []);
 
   useEffect(() => {
@@ -126,7 +123,7 @@ export default function IntroLoader({ children }: { children: ReactNode }) {
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="auto"
             className="h-full w-full object-cover"
             src={`${basePath}/videos/intro.mp4`}
           />
