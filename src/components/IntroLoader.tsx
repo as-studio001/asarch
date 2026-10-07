@@ -126,7 +126,7 @@ export default function IntroLoader({ children }: { children: ReactNode }) {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             className="h-full w-full object-cover"
             src={`${basePath}/videos/intro.mp4`}
           />
